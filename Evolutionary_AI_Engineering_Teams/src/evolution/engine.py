@@ -510,7 +510,7 @@ def _rule_upgrade_requirements_model(
     if req_agent.model and req_agent.model not in (None, "mock", "gemini-1.5-flash"):
         return []
 
-    target_model = "gemini-2.5-flash"
+    target_model = "gemini-3.5-flash"
     candidate, surfaces = mutators.change_model(harness, req_agent.id, target_model)
     proposal = MutationProposal(
         proposal_id=make_proposal_id(),

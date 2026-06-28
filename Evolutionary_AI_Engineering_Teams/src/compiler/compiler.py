@@ -17,7 +17,7 @@ from src.compiler.prompt import (
 
 # Default model stamped on every compiled agent so the UI/artifact reflects the
 # real model rather than falling back to "mock".
-DEFAULT_AGENT_MODEL = "gemini-2.5-flash"
+DEFAULT_AGENT_MODEL = "gemini-3.5-flash"
 
 
 class CompilationError(Exception):

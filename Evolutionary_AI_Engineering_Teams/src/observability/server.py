@@ -198,7 +198,7 @@ class RunRequest(BaseModel):
     max_generations: int = 3
     use_gemini: bool = False
     project_id: str = "ai-hack-sf26sfo-7208"
-    model_id: str = "gemini-2.5-flash"
+    model_id: str = "gemini-3.5-flash"
     num_agents: Optional[int] = None
     # Per-agent prompt detail level: "brief" | "detailed" | "exhaustive".
     prompt_detail: str = "detailed"
