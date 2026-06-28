@@ -35,3 +35,5 @@ secrets/
 
 # Large local recordings (keep on disk, not in git)
 *.mov
+# ...but do track the demo artifact recordings (small, committed)
+!artifacts/*.mov
