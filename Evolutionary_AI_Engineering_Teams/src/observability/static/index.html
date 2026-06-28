@@ -289,6 +289,54 @@ input[type=range]::-webkit-slider-thumb{
 .eval-empty{text-align:center;color:var(--dim);font-style:italic;padding:40px 20px;font-size:12px}
 
 /* ════════════════════════════════════════════════════════════
+   TRY AGENT TAB
+   ════════════════════════════════════════════════════════════ */
+.try-content{padding:24px 20px;max-width:760px;margin:0 auto}
+.try-content .hidden{display:none}
+.try-header{margin-bottom:18px}
+.try-title{
+  font-size:18px;font-weight:700;margin-bottom:4px;
+  background:linear-gradient(135deg,#e2e8f0,#94a3b8);
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;
+}
+.try-subtitle{color:var(--dim);font-size:11px;max-width:560px}
+.try-note{color:var(--yellow);font-size:11px;margin:4px 0 0;opacity:.85}
+.try-field-label{font-size:9px;letter-spacing:1.2px;text-transform:uppercase;color:var(--dim);margin:0 0 6px}
+.try-output-wrap{margin-top:20px}
+.try-output{
+  font-size:13px;line-height:1.7;color:var(--bright);white-space:pre-wrap;word-break:break-word;
+  background:rgba(255,255,255,.025);border:1px solid var(--card-border);
+  border-radius:10px;padding:14px 16px;min-height:48px;
+}
+.try-output.running{color:var(--cyan);font-style:italic;opacity:.85}
+.try-output.error{color:var(--red);border-color:rgba(239,68,68,.3);background:rgba(239,68,68,.06)}
+.try-feedback{
+  margin-top:18px;padding:14px 16px;border-radius:12px;
+  background:var(--card-bg);border:1px solid var(--card-border);
+}
+.try-feedback-q{font-size:12px;color:var(--text);font-weight:bold;margin-bottom:10px}
+.try-feedback-btns{display:flex;gap:10px}
+.try-vote{
+  padding:8px 18px;border-radius:8px;cursor:pointer;
+  font-family:var(--font);font-size:12px;font-weight:bold;
+  background:rgba(255,255,255,.04);border:1px solid var(--card-border);
+  color:var(--text);transition:all .2s;
+}
+.try-vote-up:hover{border-color:rgba(34,197,94,.4);color:var(--green);background:rgba(34,197,94,.08)}
+.try-vote-down:hover{border-color:rgba(239,68,68,.4);color:var(--red);background:rgba(239,68,68,.08)}
+.try-vote:disabled{opacity:.4;cursor:not-allowed}
+.try-feedback-result{margin-top:12px;font-size:12px;min-height:16px}
+.try-feedback-result.ok{color:var(--green)}
+.try-feedback-result.err{color:var(--red)}
+.try-go-label{
+  display:inline-block;margin-top:8px;padding:6px 14px;border-radius:8px;
+  border:1px solid rgba(6,182,212,.3);background:rgba(6,182,212,.1);
+  color:var(--cyan);font-family:var(--font);font-size:12px;font-weight:bold;
+  cursor:pointer;transition:all .2s;
+}
+.try-go-label:hover{background:rgba(6,182,212,.18);box-shadow:0 0 14px rgba(6,182,212,.2)}
+
+/* ════════════════════════════════════════════════════════════
    MONITOR TAB
    ════════════════════════════════════════════════════════════ */
 #monitor{flex:1;grid-template-columns:248px 1fr 268px;overflow:hidden}
@@ -837,6 +885,7 @@ input[type=range]::-webkit-slider-thumb{
   <button class="tab-btn" data-tab="monitor"><span class="tab-dot"></span>Monitor</button>
   <button class="tab-btn" data-tab="evolution"><span class="tab-dot"></span>Evolution</button>
   <button class="tab-btn" data-tab="metrics"><span class="tab-dot"></span>Metrics</button>
+  <button class="tab-btn" data-tab="tryagent"><span class="tab-dot"></span>Try Agent</button>
   <button class="tab-btn" data-tab="evaldata"><span class="tab-dot"></span>Eval Dataset</button>
   <button class="tab-btn" data-tab="docs"><span class="tab-dot"></span>Docs</button>
   <div id="run-indicator"><span class="ri-dot"></span><span id="ri-text">idle</span></div>
@@ -1043,6 +1092,38 @@ input[type=range]::-webkit-slider-thumb{
           </thead>
           <tbody id="metrics-tbody"><tr><td colspan="7" style="text-align:center;padding:20px;color:var(--dim);font-style:italic">Start a run to see metrics</td></tr></tbody>
         </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── Try Agent ───────────────────────────────────────────── -->
+  <div id="tryagent" class="tab-pane scroll">
+    <div class="try-content">
+      <div class="try-header">
+        <h2 class="try-title">Try Agent</h2>
+        <p class="try-subtitle">Ask the latest evolved agent a real question. A thumbs-down captures the case into the Eval Dataset — closing the feedback flywheel.</p>
+      </div>
+
+      <div class="field">
+        <label>Your question</label>
+        <textarea id="try-input" class="glass-textarea" rows="4" placeholder="Ask the agent… e.g. Why did my GCP bill spike and how do I cut it?"></textarea>
+      </div>
+      <p class="try-note">⏳ Runs the latest evolved agent on real models — this can take ~30–60s.</p>
+      <button id="try-run-btn" class="start-btn">▶ Run agent</button>
+
+      <div id="try-output-wrap" class="try-output-wrap hidden">
+        <div class="try-field-label">Agent response</div>
+        <div id="try-output" class="try-output"></div>
+      </div>
+
+      <div id="try-feedback" class="try-feedback hidden">
+        <div class="try-feedback-q">Was this good?</div>
+        <div class="try-feedback-btns">
+          <button id="try-up" class="try-vote try-vote-up">👍 Good</button>
+          <button id="try-down" class="try-vote try-vote-down">👎 Bad</button>
+        </div>
+        <textarea id="try-comment" class="glass-textarea" rows="3" placeholder="What was wrong / what did you expect?" style="margin-top:10px"></textarea>
+        <div id="try-feedback-result" class="try-feedback-result"></div>
       </div>
     </div>
   </div>
@@ -2604,6 +2685,116 @@ async function fetchStateAndSync(){
     renderAgentGraph();
   } catch(_){}
 }
+
+// ════════════════════════════════════════════════════════════
+// TRY AGENT TAB
+// ════════════════════════════════════════════════════════════
+// Closes the feedback flywheel: user tries the agent, a thumbs-down
+// captures the case into the eval dataset.
+const TRY_AGENT_ID='demo-agent';
+let _tryLast=null;      // {input, output} of the last successful run
+let _tryInFlight=false;
+
+async function runTryAgent(){
+  if(_tryInFlight)return;
+  const input=$('try-input').value.trim();
+  if(!input){$('try-input').focus();return;}
+  const btn=$('try-run-btn');
+  const outWrap=$('try-output-wrap');
+  const out=$('try-output');
+  const fb=$('try-feedback');
+  // Reset feedback UI for the new run
+  fb.classList.add('hidden');
+  $('try-feedback-result').textContent='';
+  $('try-feedback-result').className='try-feedback-result';
+  $('try-comment').value='';
+  // Running state
+  _tryInFlight=true;
+  btn.disabled=true;const origLabel=btn.textContent;btn.textContent='Running…';
+  outWrap.classList.remove('hidden');
+  out.className='try-output running';
+  out.textContent='Running the latest evolved agent on real models… this can take ~30–60s.';
+  try{
+    const r=await fetch('/api/agent/try',{
+      method:'POST',headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({input,agent_id:TRY_AGENT_ID}),
+    });
+    const res=await r.json().catch(()=>({}));
+    if(!r.ok || res.status==='error' || res.status!=='ok'){
+      out.className='try-output error';
+      out.textContent=(res && res.message)?res.message:('Request failed (HTTP '+r.status+').');
+      _tryLast=null;
+    }else{
+      const output=res.output==null?'':String(res.output);
+      out.className='try-output';
+      out.textContent=output;
+      _tryLast={input,output};
+      // Reveal the feedback row, re-enable both vote buttons
+      $('try-up').disabled=false;$('try-down').disabled=false;
+      fb.classList.remove('hidden');
+    }
+  }catch(e){
+    out.className='try-output error';
+    out.textContent='Could not reach the agent — '+(e.message||'try again.');
+    _tryLast=null;
+  }finally{
+    _tryInFlight=false;
+    btn.disabled=false;btn.textContent=origLabel;
+  }
+}
+
+async function submitTryFeedback(sentiment){
+  const resEl=$('try-feedback-result');
+  resEl.className='try-feedback-result';
+  if(!_tryLast){resEl.classList.add('err');resEl.textContent='Run the agent first.';return;}
+  const comment=$('try-comment').value.trim();
+  // Positive: keep it simple — local thanks. (Server ignores non-negative anyway.)
+  if(sentiment!=='negative'){
+    resEl.classList.add('ok');
+    resEl.textContent='Thanks for the feedback! 🙌';
+    $('try-up').disabled=true;
+    return;
+  }
+  // Negative: capture into the eval dataset.
+  $('try-down').disabled=true;$('try-up').disabled=true;
+  resEl.textContent='Capturing…';
+  try{
+    const r=await fetch('/api/eval-cases/capture',{
+      method:'POST',headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({
+        agent_id:TRY_AGENT_ID,
+        input:_tryLast.input,
+        actual_output:_tryLast.output,
+        feedback:comment,
+        sentiment:'negative',
+      }),
+    });
+    if(!r.ok)throw new Error('HTTP '+r.status);
+    const res=await r.json().catch(()=>({}));
+    if(res.status!=='captured'){
+      // e.g. server-side ignored / unexpected
+      throw new Error(res.message||('status: '+(res.status||'unknown')));
+    }
+    resEl.className='try-feedback-result ok';
+    resEl.innerHTML=`✓ Added to Eval Dataset for labeling (${esc(res.id||'ec-…')}) `;
+    const go=document.createElement('button');
+    go.className='try-go-label';
+    go.textContent='Go label it →';
+    go.addEventListener('click',()=>{switchTab('evaldata');loadEvalCases();});
+    resEl.appendChild(document.createElement('br'));
+    resEl.appendChild(go);
+  }catch(e){
+    resEl.className='try-feedback-result err';
+    resEl.textContent='Could not capture — '+(e.message||'try again.');
+    $('try-down').disabled=false;$('try-up').disabled=false;
+  }
+}
+
+(function(){
+  const rb=$('try-run-btn');if(rb)rb.addEventListener('click',runTryAgent);
+  const up=$('try-up');if(up)up.addEventListener('click',()=>submitTryFeedback('positive'));
+  const dn=$('try-down');if(dn)dn.addEventListener('click',()=>submitTryFeedback('negative'));
+})();
 
 // ════════════════════════════════════════════════════════════
 // EVAL DATASET TAB

@@ -229,6 +229,11 @@ class LabelRequest(BaseModel):
     labeled_by: str = "admin"
 
 
+class TryRequest(BaseModel):
+    input: str
+    agent_id: str = "demo-agent"
+
+
 # ---------------------------------------------------------------------------
 # FastAPI app factory
 # ---------------------------------------------------------------------------
@@ -445,6 +450,86 @@ def create_app(
         if updated is None:
             return {"status": "error", "message": "case not found"}
         return {"status": "labeled", "case": updated}
+
+    # ── Try the current evolved agent (closes the feedback flywheel) ──
+    @app.post("/api/agent/try")
+    async def try_agent(req: TryRequest):
+        if store is None:
+            return {"status": "error", "message": "no store"}
+
+        from src.ir.loader import load_harness_from_dict
+        from src.runtime.executor import RuntimeExecutor
+        from src.runtime.mock_agents import run_mock_agent
+
+        # 1. Load the latest evolved harness. Prefer the best-scored org for the
+        # requested agent prefix; otherwise fall back to the most recently
+        # inserted doc in the `organizations` collection ($natural order).
+        doc = None
+        try:
+            doc = store.get_best_organization(req.agent_id)
+        except Exception:
+            doc = None
+        if not doc:
+            try:
+                doc = store._db["organizations"].find_one(
+                    {}, {"_id": 0}, sort=[("$natural", -1)]
+                )
+            except Exception:
+                doc = None
+        if not doc:
+            return {
+                "status": "error",
+                "message": "no evolved agent yet — run an evolution first",
+            }
+
+        harness = load_harness_from_dict(doc)
+
+        # 2. Override the task description/input with the user's input so the
+        # agent responds to it (not the original evolution objective).
+        harness.task.description = req.input
+        harness.task.inputs = {"input": req.input}
+
+        # 3. Build a real Gemini runner exactly like _web_run_callback does,
+        # falling back to the deterministic mock so the endpoint never hard-fails.
+        runner = run_mock_agent
+        try:
+            from src.llm.clients import GeminiAPIClient
+            from src.gemini.agent_runner import make_gemini_tool_runner
+
+            client = GeminiAPIClient()
+            runner = make_gemini_tool_runner(client, task=harness.task)
+        except Exception:
+            runner = run_mock_agent
+
+        # 4. Execute ONE run — no evolution, no mutations.
+        executor = RuntimeExecutor(agent_runner=runner)
+        run = executor.run(harness)
+
+        # 5. Extract a human-readable output from the produced artifacts,
+        # excluding the raw execution_trace. Prefer the final artifact.
+        parts: List[str] = []
+        for key, val in run.artifacts.items():
+            if key == "execution_trace":
+                continue
+            text = val if isinstance(val, str) else json.dumps(val, indent=2, default=str)
+            parts.append(f"## {key}\n{text}")
+        output = "\n\n".join(parts).strip()
+        if len(output) > 4000:
+            output = output[:4000] + "\n…(truncated)"
+
+        # 6. Best-effort persist the run.
+        run_id = ""
+        try:
+            run_id = store.save_run(run) or ""
+        except Exception:
+            run_id = run.run_id
+
+        return {
+            "status": "ok",
+            "output": output,
+            "harness_id": harness.organization.id,
+            "run_id": run_id,
+        }
 
     return app
 
