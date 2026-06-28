@@ -1119,11 +1119,11 @@ input[type=range]::-webkit-slider-thumb{
   <div class="grid">
     <div class="card">
       <div style="font-weight:700;color:#06b6d4;">Compile</div>
-      <p class="muted">Gemini turns a natural-language task into a validated <strong>Harness IR</strong> — agents, prompts, tools, phases, communication edges, evaluation contract.</p>
+      <p class="muted">An <strong>LLM compiler</strong> (Claude or Gemini) turns a natural-language task into a validated <strong>Harness IR</strong> — agents, prompts, tools, phases, communication edges, evaluation contract.</p>
     </div>
     <div class="card">
       <div style="font-weight:700;color:#a855f7;">Run &amp; Evaluate</div>
-      <p class="muted">Agents execute in sandboxed phases, calling tools via Gemini function-calling. A weighted-sum scorer plus an LLM judge grade the run.</p>
+      <p class="muted">Agents execute in sandboxed phases, calling tools via the model's function-calling. A weighted-sum scorer plus a real LLM-as-judge (Claude Sonnet 4.6 / Gemini 3.5 Flash), on by default, grade the run.</p>
     </div>
     <div class="card">
       <div style="font-weight:700;color:#22c55e;">Mine &amp; Mutate</div>
@@ -1133,6 +1133,132 @@ input[type=range]::-webkit-slider-thumb{
       <div style="font-weight:700;color:#f59e0b;">Gate &amp; Chain</div>
       <p class="muted">A validation gate accepts a candidate only on <strong>no regression + a real improvement</strong>. The winner becomes the parent of the next generation.</p>
     </div>
+  </div>
+
+  <!-- ============================================================= -->
+  <!-- 1b. FEEDBACK FLYWHEEL & EVAL DATASET                          -->
+  <!-- ============================================================= -->
+  <h2>Feedback Flywheel &amp; Eval Dataset</h2>
+  <p class="lead">
+    Evolution is only as good as the signal it optimizes against. The system runs in
+    <strong style="color:#06b6d4;">two evaluation modes</strong> and closes a human-in-the-loop
+    flywheel so the dataset — and therefore the organization — keeps getting better in production.
+  </p>
+
+  <div class="grid">
+    <div class="card">
+      <div style="font-weight:700;color:#22c55e;">Mode A · Ground-truth eval cases</div>
+      <p class="muted">When labeled data exists, runs are graded <strong>reference-based</strong>: each <code>EvalCase</code> carries a customer <code>input</code> and a human-authored <code>expected_output</code>, and the agent's actual output is scored against it.</p>
+    </div>
+    <div class="card">
+      <div style="font-weight:700;color:#a855f7;">Mode B · LLM-as-judge</div>
+      <p class="muted">When no labels exist, a <strong>real LLM-as-judge</strong> grades the run. It is <strong>on by default</strong> — no longer optional. Backends: <strong>Claude Sonnet 4.6 via Vertex AI</strong> (preferred, ADC auth) with <strong>Gemini 3.5 Flash via the Generative Language API key</strong> as fallback. The legacy Vertex-Gemini publisher client is deprecated (it 404s).</p>
+    </div>
+  </div>
+
+  <h3>The flywheel loop</h3>
+  <p>
+    A deployed workflow doesn't just answer customers — it mines its own failures and feeds
+    them back as new training data. The loop runs continuously:
+  </p>
+
+  <div class="card" style="padding:8px;">
+  <svg viewBox="0 0 980 250" font-family="system-ui" role="img" aria-label="Feedback flywheel loop">
+    <defs>
+      <marker id="ffah" markerWidth="9" markerHeight="9" refX="7" refY="3" orient="auto" markerUnits="strokeWidth">
+        <path d="M0,0 L7,3 L0,6 Z" fill="#64748b"/>
+      </marker>
+      <marker id="ffahg" markerWidth="9" markerHeight="9" refX="7" refY="3" orient="auto" markerUnits="strokeWidth">
+        <path d="M0,0 L7,3 L0,6 Z" fill="#22c55e"/>
+      </marker>
+    </defs>
+
+    <!-- Served workflow -->
+    <rect x="20" y="30" width="150" height="64" rx="12" fill="rgba(6,182,212,.10)" stroke="#06b6d4"/>
+    <text x="95" y="56" text-anchor="middle" fill="#67e8f9" font-size="13" font-weight="700">Served workflow</text>
+    <text x="95" y="74" text-anchor="middle" fill="#94a3b8" font-size="11">answers customers</text>
+
+    <!-- Sentiment sentinel -->
+    <rect x="215" y="30" width="170" height="64" rx="12" fill="rgba(245,158,11,.10)" stroke="#f59e0b"/>
+    <text x="300" y="52" text-anchor="middle" fill="#fcd34d" font-size="13" font-weight="700">Sentiment Sentinel</text>
+    <text x="300" y="70" text-anchor="middle" fill="#94a3b8" font-size="11">platform-level · exempt</text>
+    <text x="300" y="84" text-anchor="middle" fill="#94a3b8" font-size="11">from evolution</text>
+
+    <!-- EvalCase captured -->
+    <rect x="430" y="30" width="170" height="64" rx="12" fill="rgba(236,72,153,.10)" stroke="#ec4899"/>
+    <text x="515" y="52" text-anchor="middle" fill="#f9a8d4" font-size="13" font-weight="700">EvalCase captured</text>
+    <text x="515" y="70" text-anchor="middle" fill="#94a3b8" font-size="11">status=needs_label</text>
+    <text x="515" y="84" text-anchor="middle" fill="#94a3b8" font-size="11">input + snapshot + output</text>
+
+    <!-- Human labels -->
+    <rect x="645" y="30" width="170" height="64" rx="12" fill="rgba(34,197,94,.10)" stroke="#22c55e"/>
+    <text x="730" y="52" text-anchor="middle" fill="#86efac" font-size="13" font-weight="700">Human labels</text>
+    <text x="730" y="70" text-anchor="middle" fill="#94a3b8" font-size="11">Eval Dataset tab</text>
+    <text x="730" y="84" text-anchor="middle" fill="#94a3b8" font-size="11">status=labeled</text>
+
+    <!-- Re-evolve -->
+    <rect x="430" y="160" width="170" height="64" rx="12" fill="rgba(168,85,247,.10)" stroke="#a855f7"/>
+    <text x="515" y="186" text-anchor="middle" fill="#c4b5fd" font-size="13" font-weight="700">Re-evolve + gate</text>
+    <text x="515" y="204" text-anchor="middle" fill="#94a3b8" font-size="11">graded vs expected_output</text>
+    <text x="515" y="218" text-anchor="middle" fill="#94a3b8" font-size="11">no regression → redeploy</text>
+
+    <!-- arrows across top -->
+    <line x1="170" y1="62" x2="211" y2="62" stroke="#64748b" stroke-width="2" marker-end="url(#ffah)"/>
+    <line x1="385" y1="62" x2="426" y2="62" stroke="#64748b" stroke-width="2" marker-end="url(#ffah)"/>
+    <text x="408" y="24" text-anchor="middle" fill="#f9a8d4" font-size="10">neg. sentiment</text>
+    <line x1="600" y1="62" x2="641" y2="62" stroke="#64748b" stroke-width="2" marker-end="url(#ffah)"/>
+    <!-- labeled down to re-evolve -->
+    <path d="M730,94 C730,150 620,170 604,180" fill="none" stroke="#22c55e" stroke-width="2" stroke-dasharray="6 4" marker-end="url(#ffahg)"/>
+    <text x="700" y="140" text-anchor="middle" fill="#86efac" font-size="10">batch of labeled cases</text>
+    <!-- re-evolve back to served (redeploy) -->
+    <path d="M430,192 C200,210 95,160 95,98" fill="none" stroke="#22c55e" stroke-width="2" stroke-dasharray="6 4" marker-end="url(#ffahg)"/>
+    <text x="200" y="180" text-anchor="middle" fill="#86efac" font-size="10">redeploy improved workflow</text>
+  </svg>
+  </div>
+
+  <ul>
+    <li><strong>Sentinel is platform-level.</strong> The feedback/sentiment agent is injected by the platform and <em>exempt from evolution</em>, so the optimizer can never prune or rewrite the very component that captures training signal.</li>
+    <li><strong>Capture on negative sentiment.</strong> When the sentinel flags a bad answer, it writes an <code>EvalCase</code> with <code>status=needs_label</code>, freezing the <code>input</code>, a <code>context_snapshot</code>, and the agent's <code>actual_output</code>.</li>
+    <li><strong>Human supplies the label.</strong> An admin (or the end user) opens the <strong>Eval Dataset</strong> tab and writes the <code>expected_output</code>; the case flips to <code>status=labeled</code>.</li>
+    <li><strong>Only labeled cases drive evolution.</strong> The trigger fires on a <em>batch / threshold</em> of newly labeled cases — never on raw unlabeled ones.</li>
+    <li><strong>Gate against the full dataset.</strong> Before any redeploy, the evolved agent is graded reference-based against the <em>entire</em> labeled dataset to guarantee no regression. <span class="muted">(The scheduler that orchestrates this batching/triggering is the orchestration layer and is not yet fully built.)</span></li>
+  </ul>
+
+  <h3>Three per-agent optimization knobs</h3>
+  <p>
+    Evolution now tunes <strong>three</strong> surfaces of every agent, not two:
+    <span class="chip" style="color:#67e8f9;border-color:#06b6d4;">model</span>
+    <span class="chip" style="color:#c4b5fd;border-color:#a855f7;">prompt</span>
+    <span class="chip" style="color:#86efac;border-color:#22c55e;">tools</span>
+    — the model it runs on, the instructions it follows, and the tool surface it can call.
+  </p>
+
+  <h3>The <code>eval_cases</code> collection</h3>
+  <p>
+    Captured cases live in the <code>eval_cases</code> MongoDB collection. Each <code>EvalCase</code> record carries:
+  </p>
+  <ul>
+    <li><code>id</code> · <code>agent_id</code> — which deployed agent produced the answer.</li>
+    <li><code>input</code> — the customer question.</li>
+    <li><code>context_snapshot</code> — frozen state the agent saw (so the case is reproducible).</li>
+    <li><code>actual_output</code> — what the agent actually returned.</li>
+    <li><code>feedback</code> · <code>sentiment</code> — the sentinel's verdict.</li>
+    <li><code>expected_output</code> — the human-authored ground truth (filled at label time).</li>
+    <li><code>status</code> — <code>needs_label</code> → <code>labeled</code>; <code>labeled_by</code> · <code>created_at</code>.</li>
+  </ul>
+
+  <div class="card">
+    <div style="font-weight:700;color:#f59e0b;">Worked example · FinOps</div>
+    <p class="muted"><strong>input:</strong> <code>"why did my GCP bill spike + how to cut it"</code></p>
+    <p class="muted"><strong>context_snapshot (frozen):</strong> billing total = $48,200 this month vs $31,400 last month; 14 idle Compute Engine instances; 3 un-attached SSD persistent disks; a Cloud SQL HA pair at 7% CPU.</p>
+    <p class="muted"><strong>expected_output (structured, ranked by $-savings):</strong></p>
+    <ul>
+      <li>1 · Delete / right-size 14 idle instances → <strong>~$9.1k/mo</strong>.</li>
+      <li>2 · Downgrade the over-provisioned Cloud SQL HA pair → <strong>~$3.4k/mo</strong>.</li>
+      <li>3 · Remove 3 orphaned SSD disks + stale snapshots → <strong>~$1.2k/mo</strong>.</li>
+      <li>4 · Apply committed-use discounts on the steady-state baseline → <strong>~$2.0k/mo</strong>.</li>
+    </ul>
+    <p class="muted">The agent's answer is then <strong>graded reference-based</strong> against this ranked, dollar-quantified expected_output — not a vibe check.</p>
   </div>
 
   <!-- ============================================================= -->
@@ -1162,9 +1288,9 @@ input[type=range]::-webkit-slider-thumb{
     <text x="95" y="84" text-anchor="middle" fill="#94a3b8" font-size="11">+ constraints, domain,</text>
     <text x="95" y="98" text-anchor="middle" fill="#94a3b8" font-size="11">prior lessons</text>
 
-    <!-- Gemini Compiler -->
+    <!-- LLM Compiler -->
     <rect x="210" y="32" width="160" height="78" rx="12" fill="rgba(168,85,247,.10)" stroke="#a855f7"/>
-    <text x="290" y="60" text-anchor="middle" fill="#c4b5fd" font-size="13" font-weight="700">Gemini Compiler</text>
+    <text x="290" y="60" text-anchor="middle" fill="#c4b5fd" font-size="13" font-weight="700">LLM Compiler</text>
     <text x="290" y="80" text-anchor="middle" fill="#94a3b8" font-size="11">synth + schema retry</text>
     <text x="290" y="95" text-anchor="middle" fill="#94a3b8" font-size="11">normalize · stamp model</text>
 
@@ -1258,13 +1384,13 @@ input[type=range]::-webkit-slider-thumb{
     <circle cx="46" cy="108" r="18" fill="rgba(6,182,212,.15)" stroke="#06b6d4"/><text x="46" y="113" text-anchor="middle" fill="#67e8f9" font-size="14" font-weight="700">2</text>
     <rect x="80" y="86" width="860" height="44" rx="10" fill="rgba(255,255,255,.04)" stroke="rgba(255,255,255,.08)"/>
     <text x="98" y="104" fill="#f1f5f9" font-size="13" font-weight="700">Run</text>
-    <text x="98" y="121" fill="#94a3b8" font-size="11">RuntimeExecutor steps each phase; agents call sandboxed tools (mock or real Gemini function-calling). Save the RunResult.</text>
+    <text x="98" y="121" fill="#94a3b8" font-size="11">RuntimeExecutor steps each phase; agents call sandboxed tools (mock or real model function-calling — Claude or Gemini). Save the RunResult.</text>
 
     <!-- Stage 3 -->
     <circle cx="46" cy="170" r="18" fill="rgba(34,197,94,.15)" stroke="#22c55e"/><text x="46" y="175" text-anchor="middle" fill="#86efac" font-size="14" font-weight="700">3</text>
     <rect x="80" y="148" width="860" height="44" rx="10" fill="rgba(255,255,255,.04)" stroke="rgba(255,255,255,.08)"/>
     <text x="98" y="166" fill="#f1f5f9" font-size="13" font-weight="700">Evaluate</text>
-    <text x="98" y="183" fill="#94a3b8" font-size="11">score_run() computes weighted-sum metrics + binary checks; an optional Gemini judge overrides booleans it can truly verify.</text>
+    <text x="98" y="183" fill="#94a3b8" font-size="11">score_run() computes weighted-sum metrics + binary checks; a real LLM-as-judge (Claude Sonnet 4.6 / Gemini 3.5 Flash), on by default, grades vs expected_output or overrides booleans it can verify.</text>
 
     <!-- Stage 4 -->
     <circle cx="46" cy="232" r="18" fill="rgba(236,72,153,.15)" stroke="#ec4899"/><text x="46" y="237" text-anchor="middle" fill="#f9a8d4" font-size="14" font-weight="700">4</text>
@@ -1398,7 +1524,7 @@ input[type=range]::-webkit-slider-thumb{
 
   <div class="mut" style="border-color:#a855f7;">
     <strong style="color:#c4b5fd;">modify_prompt</strong>
-    <span class="muted"> — grow/specialize an agent's prompt (e.g. tie every acceptance criterion to a test assertion, or enforce a minimal-diff methodology). Uses Gemini to genuinely expand the prompt when a client is available, else a deterministic append.</span>
+    <span class="muted"> — grow/specialize an agent's prompt (e.g. tie every acceptance criterion to a test assertion, or enforce a minimal-diff methodology). Uses the LLM (Claude or Gemini) to genuinely expand the prompt when a client is available, else a deterministic append.</span>
   </div>
   <div class="mut" style="border-color:#f59e0b;">
     <strong style="color:#fcd34d;">adjust_budget</strong>
@@ -1505,7 +1631,7 @@ input[type=range]::-webkit-slider-thumb{
         <div class="stage"><div class="stage-num">3</div><div class="stage-body"><p><strong>Evaluate</strong> — Score the run: weighted sum of binary checks (tests pass, feature works, reviewer accepts) plus penalties (tool calls, diff size). Threshold: 70.</p></div></div>
         <div class="stage"><div class="stage-num">4</div><div class="stage-body"><p><strong>Mine weaknesses</strong> — 8 rule-based classifiers scan the execution trace to produce <code>FailureSignature</code> structs (mechanism + agent behavior + cause).</p></div></div>
         <div class="stage"><div class="stage-num">5</div><div class="stage-body"><p><strong>Propose mutations</strong> — Each failure mechanism maps to one or more mutation operators (modify_prompt, modify_tools, adjust_budget, add_agent, remove_agent, reorder_edges…).</p></div></div>
-        <div class="stage"><div class="stage-num">6</div><div class="stage-body"><p><strong>Run candidates</strong> — Each mutated harness is fully executed (same executor, same mock/Gemini backend).</p></div></div>
+        <div class="stage"><div class="stage-num">6</div><div class="stage-body"><p><strong>Run candidates</strong> — Each mutated harness is fully executed (same executor, same mock or real LLM backend — Claude or Gemini).</p></div></div>
         <div class="stage"><div class="stage-num">7</div><div class="stage-body"><p><strong>Validation gate</strong> — A candidate is accepted only if: no regression on protected metrics AND improvement on at least one target metric.</p></div></div>
         <div class="stage"><div class="stage-num">8</div><div class="stage-body"><p><strong>Persist</strong> — All runs, evaluations, mutations, and lessons are stored in MongoDB (or mongomock for local demo). Lessons feed back into future compilation prompts.</p></div></div>
         <div class="stage"><div class="stage-num">9</div><div class="stage-body"><p><strong>Chain</strong> — If a candidate was accepted, it becomes the next generation's base. Repeat up to max_generations.</p></div></div>
@@ -1549,7 +1675,7 @@ observability:  trace_level, log_events[]</code></pre>
         <tr><td>python3 cli.py compile "task" --output out.yaml</td><td>Compile harness to file</td></tr>
         <tr><td>python3 cli.py run harness.yaml</td><td>Single execution cycle, no evolution</td></tr>
         <tr><td>python3 cli.py summary harness-id</td><td>Print MongoDB run summary</td></tr>
-        <tr><td>--gemini</td><td>Use live Gemini AI instead of mock agents</td></tr>
+        <tr><td>--gemini</td><td>Use live LLM agents instead of mocks. Real execution runs through the working LLM backends in <code>src/llm/clients.py</code> (Claude Sonnet 4.6 via Vertex AI, Gemini 3.5 Flash via API key).</td></tr>
         <tr><td>--project, --model</td><td>Override Vertex AI project / model ID</td></tr>
       </table>
 
@@ -1558,11 +1684,11 @@ observability:  trace_level, log_events[]</code></pre>
       <pre><code>User prompt
     │
     ▼
-HarnessCompiler ──────────────────── GeminiClient (optional)
+HarnessCompiler ──────────────────── LLM client (Claude | Gemini)
     │  compile(task) → OrganizationHarness IR (YAML)
     ▼
 EvolutionPipeline
-    ├── RuntimeExecutor ─── AgentRunner (mock | Gemini)
+    ├── RuntimeExecutor ─── AgentRunner (mock | Claude | Gemini)
     │       └── phases → agents → tool_calls → artifacts
     ├── EvaluationScorer ── weighted_sum → EvaluationResult
     ├── WeaknessMiner ───── 8 classifiers → FailureSignature[]
