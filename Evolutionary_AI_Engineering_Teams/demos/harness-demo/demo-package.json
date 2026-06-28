@@ -1,0 +1,13 @@
+{
+  "name": "SCOPE/DEMO_NAME",
+  "version": "0.1.0",
+  "private": true,
+  "description": "DEMO_NAME video — Remotion + Kokoro-TTS pipeline producing a ~3 min mp4.",
+  "scripts": {
+    "prepare:assets": "npx -y pnpm@9.7.1 --filter SCOPE/DEMO_NAME-assets run prepare",
+    "voice:warm": "npx -y pnpm@9.7.1 --filter SCOPE/DEMO_NAME-video run voice:warm",
+    "studio": "npx -y pnpm@9.7.1 --filter SCOPE/DEMO_NAME-video run studio",
+    "render": "npx -y pnpm@9.7.1 --filter SCOPE/DEMO_NAME-video run render",
+    "build": "npm run prepare:assets && npm run voice:warm && npm run render"
+  }
+}

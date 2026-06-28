@@ -1,0 +1,37 @@
+/**
+ * Global styles imported from the composition.
+ *
+ * Visual system: premium / enterprise — near-black surface, restrained accents.
+ */
+
+* { box-sizing: border-box; }
+
+html, body {
+  margin: 0;
+  padding: 0;
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+  background: #06070e;
+  color: #fff;
+}
+
+@keyframes glow-pulse {
+  0%, 100% { box-shadow: 0 0 24px rgba(99, 102, 241, 0.28), 0 0 64px rgba(99, 102, 241, 0.09); }
+  50%      { box-shadow: 0 0 32px rgba(99, 102, 241, 0.45), 0 0 88px rgba(99, 102, 241, 0.16); }
+}
+
+/**
+ * `.shimmer-text` — accent gradient for one or two important words per slide.
+ * Vertical white → pale indigo, no animation. Reads as "premium chrome".
+ */
+.shimmer-text {
+  background: linear-gradient(180deg, #ffffff 0%, #c7d2fe 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+.glow-ring {
+  animation: glow-pulse 5s ease-in-out infinite;
+}

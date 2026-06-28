@@ -1,0 +1,17 @@
+{
+  "name": "@harness/demo-1",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Evolutionary AI Harness demo — Remotion + Kokoro-TTS pipeline producing a ~90s mp4.",
+  "scripts": {
+    "bootstrap": "npx -y pnpm@9.7.1 install",
+    "analyzer:bootstrap": "npx -y pnpm@9.7.1 --filter @harness/demo-analyzer run bootstrap-python",
+    "prepare:assets": "npx -y pnpm@9.7.1 --filter @harness/demo-assets run prepare",
+    "analyze": "npx -y pnpm@9.7.1 --filter @harness/demo-analyzer run analyze",
+    "voice:warm": "npx -y pnpm@9.7.1 --filter @harness/demo-video run voice:warm",
+    "voice:clean": "npx -y pnpm@9.7.1 --filter @harness/demo-video run voice:clean",
+    "studio": "npx -y pnpm@9.7.1 --filter @harness/demo-video run studio",
+    "render": "npx -y pnpm@9.7.1 --filter @harness/demo-video run render",
+    "build": "npm run prepare:assets && npm run analyze && npm run voice:warm && npm run render"
+  }
+}

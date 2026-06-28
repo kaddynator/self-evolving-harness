@@ -1,0 +1,13 @@
+{
+  "extends": "../tsconfig.base.json",
+  "compilerOptions": {
+    "jsx": "react-jsx",
+    "module": "ESNext",
+    "moduleResolution": "Bundler",
+    "lib": ["ES2022", "DOM", "DOM.Iterable"],
+    "types": ["node"],
+    "allowImportingTsExtensions": false,
+    "resolveJsonModule": true
+  },
+  "include": ["src", "scripts", "remotion.config.ts"]
+}

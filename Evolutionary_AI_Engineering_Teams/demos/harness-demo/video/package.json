@@ -1,0 +1,27 @@
+{
+  "name": "@harness/demo-video",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "voice:warm": "tsx scripts/warm-voice.ts",
+    "studio": "remotion studio src/index.ts",
+    "render": "remotion render src/index.ts HarnessDemo ../../../dist/harness-demo.mp4",
+    "render:preview": "remotion render src/index.ts HarnessDemo ../../../dist/harness-demo-preview.mp4 --crf 28 --concurrency 2"
+  },
+  "dependencies": {
+    "@remotion/cli": "^4.0.197",
+    "execa": "^9.3.0",
+    "kokoro-js": "^1.2.1",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1",
+    "remotion": "^4.0.197"
+  },
+  "devDependencies": {
+    "@types/node": "^20.14.10",
+    "@types/react": "^18.3.3",
+    "@types/react-dom": "^18.3.0",
+    "tsx": "^4.16.0",
+    "typescript": "^5.4.5"
+  }
+}
