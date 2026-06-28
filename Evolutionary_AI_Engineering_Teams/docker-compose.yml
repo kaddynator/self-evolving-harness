@@ -1,0 +1,15 @@
+services:
+  harness:
+    build: .
+    container_name: harness
+    ports:
+      - "8765:8765"
+    # MONGO_URI / GEMINI_API_KEY come from .env (not baked into the image)
+    env_file: .env
+    environment:
+      SERVE_HOST: "0.0.0.0"
+      # ADC is mounted read-only below; Anthropic Vertex (Claude judge) reads it.
+      GOOGLE_APPLICATION_CREDENTIALS: /secrets/adc.json
+    volumes:
+      - ./secrets/adc.json:/secrets/adc.json:ro
+    restart: unless-stopped

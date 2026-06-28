@@ -32,14 +32,18 @@ class AnthropicVertexClient:
         region: Optional[str] = None,
         timeout: int = 120,
     ) -> None:
+        import google.auth  # lazy
         from anthropic import AnthropicVertex  # lazy: requires anthropic[vertex]
 
         self._model = model_id or os.environ.get("CLAUDE_MODEL", "claude-sonnet-4-6")
         self._project = project_id or os.environ.get("VERTEX_PROJECT", "ai-hack-sf26sfo-7208")
         self._region = region or os.environ.get("VERTEX_REGION", "global")
         self.label = f"{self._model} (Vertex)"
-        # Construction triggers google.auth.default(); raises if no ADC so the
-        # caller can fall back to another backend.
+        # AnthropicVertex defers auth to the first request, which would make a
+        # creds-less environment *look* available and then fail silently inside
+        # the judge. Force the ADC check now so build_judge_client() can fall
+        # back to the Gemini API-key client when there are no GCP credentials.
+        google.auth.default(scopes=["https://www.googleapis.com/auth/cloud-platform"])
         self._client = AnthropicVertex(
             region=self._region, project_id=self._project, timeout=timeout
         )
