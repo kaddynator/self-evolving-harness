@@ -287,6 +287,27 @@ input[type=range]::-webkit-slider-thumb{
 .eval-save-btn:disabled{opacity:.4;cursor:not-allowed}
 .eval-card-err{color:var(--red);font-size:11px;min-height:14px}
 .eval-empty{text-align:center;color:var(--dim);font-style:italic;padding:40px 20px;font-size:12px}
+.eval-filters{display:flex;gap:8px;margin-bottom:16px;flex-wrap:wrap}
+.eval-filter-btn{
+  padding:5px 14px;border-radius:20px;border:1px solid var(--card-border);
+  font-family:var(--font);font-size:11px;color:var(--dim);cursor:pointer;
+  background:rgba(255,255,255,.03);transition:all .2s;
+}
+.eval-filter-btn:hover{color:var(--text);background:rgba(255,255,255,.06)}
+.eval-filter-btn.active{color:var(--cyan);background:rgba(6,182,212,.1);border-color:rgba(6,182,212,.25)}
+.eval-id{
+  display:inline-block;font-family:var(--font);font-size:11px;color:var(--cyan);
+  background:rgba(6,182,212,.08);border:1px solid rgba(6,182,212,.2);
+  border-radius:6px;padding:2px 8px;cursor:pointer;letter-spacing:.3px;
+}
+.eval-id:hover{background:rgba(6,182,212,.16)}
+.eval-id.copied{color:var(--green);border-color:rgba(34,197,94,.3);background:rgba(34,197,94,.08)}
+.eval-expected{
+  font-size:12px;line-height:1.6;color:var(--bright);white-space:pre-wrap;word-break:break-word;
+  background:rgba(34,197,94,.06);border:1px solid rgba(34,197,94,.22);
+  border-radius:8px;padding:8px 10px;
+}
+.eval-labeled-by{font-size:10px;color:var(--dim);margin-top:6px}
 
 /* ════════════════════════════════════════════════════════════
    TRY AGENT TAB
@@ -1145,6 +1166,12 @@ input[type=range]::-webkit-slider-thumb{
         <div class="eval-chip"><span class="eval-chip-num" id="eval-count-total">—</span><span class="eval-chip-label">total</span></div>
       </div>
 
+      <div class="eval-filters" id="eval-filters">
+        <button id="eval-filter-all" class="eval-filter-btn active" data-status="">All</button>
+        <button id="eval-filter-needs" class="eval-filter-btn" data-status="needs_label">Needs label</button>
+        <button id="eval-filter-labeled" class="eval-filter-btn" data-status="labeled">Labeled</button>
+      </div>
+
       <div id="eval-list"></div>
     </div>
   </div>
@@ -1843,7 +1870,7 @@ function switchTab(name){
   if(pane) pane.classList.add('active');
   if(name==='evolution') renderEvolution();
   if(name==='metrics')   renderMetrics();
-  if(name==='evaldata')  loadEvalCases();
+  if(name==='evaldata')  loadEvalCases('');
   // Re-scroll the event log to the bottom when switching to Monitor
   if(name==='monitor'){
     const log=$('event-log');
@@ -2780,7 +2807,7 @@ async function submitTryFeedback(sentiment){
     const go=document.createElement('button');
     go.className='try-go-label';
     go.textContent='Go label it →';
-    go.addEventListener('click',()=>{switchTab('evaldata');loadEvalCases();});
+    go.addEventListener('click',()=>{switchTab('evaldata');loadEvalCases('needs_label');});
     resEl.appendChild(document.createElement('br'));
     resEl.appendChild(go);
   }catch(e){
@@ -2819,18 +2846,28 @@ function _evalPrettyJson(snap){
   }
 }
 
+function _evalCopyId(el,id){
+  const done=()=>{el.classList.add('copied');const t=el.textContent;el.textContent='✓ copied';setTimeout(()=>{el.classList.remove('copied');el.textContent=t;},1100);};
+  try{
+    if(navigator.clipboard&&navigator.clipboard.writeText){
+      navigator.clipboard.writeText(id).then(done,()=>{});
+    }
+  }catch(_){/* best-effort */}
+}
+
 function renderEvalCases(cases){
   const list=$('eval-list');
   if(!list)return;
   list.innerHTML='';
   if(!cases||!cases.length){
-    list.innerHTML='<div class="eval-empty">✓ No cases waiting to be labeled.</div>';
+    list.innerHTML='<div class="eval-empty">No eval cases for this filter.</div>';
     return;
   }
   cases.forEach(c=>{
     const card=document.createElement('div');
     card.className='eval-card';
     card.dataset.caseId=c.id;
+    const isLabeled=(c.status==='labeled');
     const sentiment=(c.sentiment||'').toLowerCase();
     const sentClass=['positive','negative','neutral'].includes(sentiment)?('sentiment-'+sentiment):'';
     const snapText=_evalPrettyJson(c.context_snapshot);
@@ -2838,9 +2875,30 @@ function renderEvalCases(cases){
       ? `<details class="eval-snapshot"><summary>Context snapshot</summary><pre>${esc(snapText)}</pre></details>`
       : '';
     const metaBits=[];
+    if(c.id) metaBits.push(`<code class="eval-id" title="click to copy">${esc(c.id)}</code>`);
+    if(c.status) metaBits.push(`<span class="eval-tag ${isLabeled?'sentiment-positive':''}">${esc(c.status)}</span>`);
     if(c.agent_id) metaBits.push(`<span class="eval-tag">${esc(c.agent_id)}</span>`);
     if(c.sentiment) metaBits.push(`<span class="eval-tag ${sentClass}">${esc(c.sentiment)}</span>`);
     if(c.created_at) metaBits.push(`<span>${esc(c.created_at)}</span>`);
+
+    let labelSection;
+    if(isLabeled){
+      const by=c.labeled_by?esc(c.labeled_by):'unknown';
+      const at=c.labeled_at?esc(c.labeled_at):'';
+      labelSection=`
+        <div class="eval-field-label">✓ Expected output</div>
+        <div class="eval-expected">${esc(c.expected_output==null?'':c.expected_output)}</div>
+        <div class="eval-labeled-by">labeled by ${by}${at?(' · '+at):''}</div>`;
+    }else{
+      labelSection=`
+        <div class="eval-field-label">Expected output — what should it have said?</div>
+        <textarea class="eval-label-area" placeholder="Write the ideal answer for this case…"></textarea>
+        <div class="eval-card-actions">
+          <button class="eval-save-btn">Save label</button>
+          <span class="eval-card-err"></span>
+        </div>`;
+    }
+
     card.innerHTML=`
       <div class="eval-card-meta">${metaBits.join('')}</div>
       <div class="eval-field-label">Customer input</div>
@@ -2849,16 +2907,16 @@ function renderEvalCases(cases){
       <div class="eval-text actual">${esc(c.actual_output==null?'':c.actual_output)}</div>
       ${c.feedback?`<div class="eval-field-label">Feedback</div><div class="eval-feedback">${esc(c.feedback)}</div>`:''}
       ${snapHtml}
-      <div class="eval-field-label">Expected output — what should it have said?</div>
-      <textarea class="eval-label-area" placeholder="Write the ideal answer for this case…"></textarea>
-      <div class="eval-card-actions">
-        <button class="eval-save-btn">Save label</button>
-        <span class="eval-card-err"></span>
-      </div>`;
-    const btn=card.querySelector('.eval-save-btn');
-    const ta=card.querySelector('.eval-label-area');
-    const errEl=card.querySelector('.eval-card-err');
-    btn.addEventListener('click',()=>saveEvalLabel(c.id,ta,btn,errEl,card));
+      ${labelSection}`;
+
+    const idEl=card.querySelector('.eval-id');
+    if(idEl) idEl.addEventListener('click',()=>_evalCopyId(idEl,c.id));
+    if(!isLabeled){
+      const btn=card.querySelector('.eval-save-btn');
+      const ta=card.querySelector('.eval-label-area');
+      const errEl=card.querySelector('.eval-card-err');
+      btn.addEventListener('click',()=>saveEvalLabel(c.id,ta,btn,errEl,card));
+    }
     list.appendChild(card);
   });
 }
@@ -2879,7 +2937,7 @@ async function saveEvalLabel(id,ta,btn,errEl,card){
     // Success — remove the card and refresh counts.
     card.remove();
     if(!$('eval-list').children.length){
-      $('eval-list').innerHTML='<div class="eval-empty">✓ No cases waiting to be labeled.</div>';
+      $('eval-list').innerHTML='<div class="eval-empty">No eval cases for this filter.</div>';
     }
     loadEvalCounts();
   }catch(e){
@@ -2891,31 +2949,48 @@ async function saveEvalLabel(id,ta,btn,errEl,card){
 // Lightweight counts-only refresh (after a successful label save).
 async function loadEvalCounts(){
   try{
-    const r=await fetch('/api/eval-cases?status=needs_label');
+    const r=await fetch('/api/eval-cases');
     if(!r.ok)return;
     const data=await r.json();
     _evalSetCounts(data.counts);
   }catch(_){}
 }
 
-async function loadEvalCases(){
+// Active filter status: '' = All, 'needs_label', or 'labeled'.
+let _evalFilter='';
+
+function _evalSetActiveFilter(status){
+  _evalFilter=status||'';
+  document.querySelectorAll('.eval-filter-btn').forEach(b=>{
+    b.classList.toggle('active', (b.dataset.status||'')===_evalFilter);
+  });
+}
+
+// status falsy => All (no status param).
+async function loadEvalCases(status){
+  if(status===undefined) status=_evalFilter;
+  _evalSetActiveFilter(status);
   const list=$('eval-list');
-  if(list && !list.children.length) list.innerHTML='<div class="eval-empty">Loading…</div>';
+  if(list) list.innerHTML='<div class="eval-empty">Loading…</div>';
+  const url=status?('/api/eval-cases?status='+encodeURIComponent(status)):'/api/eval-cases';
   try{
-    const r=await fetch('/api/eval-cases?status=needs_label');
+    const r=await fetch(url);
     if(!r.ok)throw new Error('HTTP '+r.status);
     const data=await r.json();
     _evalSetCounts(data.counts);
     renderEvalCases(data.cases);
   }catch(e){
     _evalSetCounts(null);
-    if(list) list.innerHTML='<div class="eval-empty">Could not load the eval queue. The endpoint may not be available yet — try Refresh.</div>';
+    if(list) list.innerHTML='<div class="eval-empty">Could not load the eval cases. The endpoint may not be available yet — try Refresh.</div>';
   }
 }
 
 (function(){
   const rb=$('eval-refresh-btn');
-  if(rb) rb.addEventListener('click',loadEvalCases);
+  if(rb) rb.addEventListener('click',()=>loadEvalCases());
+  document.querySelectorAll('.eval-filter-btn').forEach(b=>{
+    b.addEventListener('click',()=>loadEvalCases(b.dataset.status||''));
+  });
 })();
 
 // ════════════════════════════════════════════════════════════

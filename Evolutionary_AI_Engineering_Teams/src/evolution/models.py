@@ -11,11 +11,14 @@ are kept and ones that don't are discarded.
 
 from typing import Optional
 
-# Cheapest → most capable. Agents start on gemini-2.5-flash (the middle tier and
+# Cheapest → most capable. Agents start on gemini-2.5-flash (the seed tier and
 # the compiler's DEFAULT_AGENT_MODEL); the engine explores up and down from there.
+# All served via the Generative Language API (GeminiAPIClient) — verified
+# reachable with the project key. Add newer tiers here as they become available.
 GEMINI_MODEL_POOL = [
     "gemini-2.5-flash-lite",
     "gemini-2.5-flash",
+    "gemini-3.5-flash",
     "gemini-2.5-pro",
 ]
 
