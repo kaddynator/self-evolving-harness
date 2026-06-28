@@ -13,7 +13,7 @@ present, otherwise Gemini 3.5 Flash over the Generative Language API key.
 from __future__ import annotations
 
 import os
-from typing import Optional
+from typing import Any, Dict, List, Optional
 
 import requests
 
@@ -121,6 +121,74 @@ class GeminiAPIClient:
             .get("parts", [])
         )
         return "".join(p.get("text", "") for p in parts)
+
+    # ------------------------------------------------------------------
+    # Function-calling (tool-use) support — mirrors GeminiClient's shape
+    # ------------------------------------------------------------------
+
+    def generate_with_tools(
+        self,
+        contents: List[Dict[str, Any]],
+        tool_declarations: Optional[List[Dict[str, Any]]] = None,
+        system_instruction: Optional[str] = None,
+        temperature: float = 0.2,
+        max_output_tokens: int = 2048,
+        thinking_budget: int = 0,
+        tool_mode: str = "AUTO",
+    ) -> Dict[str, Any]:
+        """Multi-turn generation with Gemini function calling over the GL API.
+
+        `contents` is the full conversation so far (caller-managed), a list of
+        {"role": "user"|"model", "parts": [...]} turns. Parts may carry text,
+        functionCall, or functionResponse entries.
+
+        Returns {"text": str, "function_calls": [{"name", "args"}], "raw_parts": [...]}
+        where raw_parts is the model turn's parts verbatim (so the caller can
+        append it back into `contents` before sending tool results).
+        """
+        url = (
+            f"https://generativelanguage.googleapis.com/v1beta/models/"
+            f"{self._model}:generateContent?key={self._key}"
+        )
+        gen_config: Dict[str, Any] = {
+            "temperature": temperature,
+            "maxOutputTokens": max_output_tokens,
+        }
+        if thinking_budget is not None:
+            gen_config["thinkingConfig"] = {"thinkingBudget": thinking_budget}
+
+        payload: Dict[str, Any] = {
+            "contents": contents,
+            "generationConfig": gen_config,
+        }
+        if tool_declarations:
+            payload["tools"] = [{"functionDeclarations": tool_declarations}]
+            payload["toolConfig"] = {"functionCallingConfig": {"mode": tool_mode}}
+        if system_instruction:
+            payload["systemInstruction"] = {"parts": [{"text": system_instruction}]}
+
+        resp = requests.post(url, json=payload, timeout=self._timeout)
+        if not resp.ok:
+            raise RuntimeError(f"Gemini API error {resp.status_code}: {resp.text[:300]}")
+        data = resp.json()
+        return self._parse_parts(data.get("candidates", []))
+
+    @staticmethod
+    def _parse_parts(candidates: List[Dict[str, Any]]) -> Dict[str, Any]:
+        """Collect text AND functionCall parts from response candidates."""
+        texts: List[str] = []
+        calls: List[Dict[str, Any]] = []
+        raw: List[Dict[str, Any]] = []
+        for candidate in candidates:
+            for part in candidate.get("content", {}).get("parts", []):
+                raw.append(part)
+                text = part.get("text", "")
+                if text:
+                    texts.append(text)
+                fc = part.get("functionCall")
+                if fc:
+                    calls.append({"name": fc.get("name"), "args": fc.get("args", {}) or {}})
+        return {"text": "".join(texts), "function_calls": calls, "raw_parts": raw}
 
 
 # ---------------------------------------------------------------------------

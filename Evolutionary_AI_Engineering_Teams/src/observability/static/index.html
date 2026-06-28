@@ -904,14 +904,9 @@ input[type=range]::-webkit-slider-thumb{
             <option value="exhaustive">Exhaustive — deep, specialized prompts</option>
           </select>
         </div>
-        <div class="field">
-          <label>Base Gemini Model</label>
-          <select id="f-model" class="glass-select">
-            <option value="gemini-2.5-flash-lite">gemini-2.5-flash-lite</option>
-            <option value="gemini-2.5-flash" selected>gemini-2.5-flash</option>
-            <option value="gemini-2.5-pro">gemini-2.5-pro</option>
-          </select>
-        </div>
+        <!-- Model is auto-optimized per agent by evolution; no manual pick.
+             Hidden seed only (the optimizer explores the pool from here). -->
+        <input type="hidden" id="f-model" value="gemini-2.5-flash">
         <div class="field">
           <label>Model Optimization</label>
           <label class="uiv-switch">
@@ -933,8 +928,8 @@ input[type=range]::-webkit-slider-thumb{
 
       <div class="model-info-bar" id="model-info-bar">
         <div class="model-info-dot"></div>
-        <span class="model-info-text">Running with Gemini</span>
-        <span class="model-info-id" id="model-info-id">gemini-2.5-flash</span>
+        <span class="model-info-text">Agents: Gemini (auto-optimized per agent)</span>
+        <span class="model-info-id" id="model-info-id">· Judge: Claude Sonnet 4.6</span>
         <span class="model-info-text" style="margin-left:auto;opacity:.5" id="model-info-agents">4 agents · 3 generations</span>
       </div>
     </div>
@@ -1804,11 +1799,11 @@ fGens.addEventListener('change',()=>{_clampNum(fGens);updateModelInfoBar();});
 fAgents.addEventListener('change',()=>{_clampNum(fAgents);updateModelInfoBar();});
 
 function updateModelInfoBar(){
-  $('model-info-id').textContent=$('f-model').value||'gemini-2.5-flash';
+  // model-info-id is static ("· Judge: Claude Sonnet 4.6"); evolution picks
+  // the per-agent Gemini model, so we don't echo a single chosen model here.
   const opt=$('f-optimize-models')&&$('f-optimize-models').checked?' · model auto-opt':'';
   $('model-info-agents').textContent=`${fAgents.value} agents · ${fGens.value} generations${opt}`;
 }
-$('f-model').addEventListener('change',updateModelInfoBar);
 const _optEl=$('f-optimize-models'); if(_optEl)_optEl.addEventListener('change',updateModelInfoBar);
 updateModelInfoBar();
 

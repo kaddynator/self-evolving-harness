@@ -56,14 +56,13 @@ def _make_bus(terminal: bool = True):
 def _make_pipeline(args, store: MongoMemoryStore, event_bus=None) -> EvolutionPipeline:
     agent_runner = None
     if getattr(args, "gemini", False):
-        from src.gemini.client import GeminiClient
+        from src.llm.clients import GeminiAPIClient
         from src.gemini.agent_runner import make_gemini_runner
-        project_id = getattr(args, "project", None) or "ai-hack-sf26sfo-7208"
         model_id = getattr(args, "model", None) or "gemini-2.5-flash"
-        client = GeminiClient(project_id=project_id, model_id=model_id)
+        client = GeminiAPIClient(model_id=model_id if "gemini" in (model_id or "") else None)
         shared_memory: dict = {}
         agent_runner = make_gemini_runner(client, shared_memory_ref=shared_memory)
-        print(f"[gemini] Using model {model_id} on project {project_id}")
+        print(f"[gemini] Using model {client.label}")
 
     # LLM-as-judge is ON by default and independent of the agent backend:
     # real judged scores drive evolution instead of the string-match heuristics.
@@ -237,11 +236,11 @@ def cmd_serve(args, store: MongoMemoryStore) -> int:
 
         if req.use_gemini:
             try:
-                from src.gemini.client import GeminiClient
-                exec_client = GeminiClient(
-                    project_id=req.project_id, model_id=req.model_id
+                from src.llm.clients import GeminiAPIClient
+                exec_client = GeminiAPIClient(
+                    model_id=req.model_id if "gemini" in (req.model_id or "") else None
                 )
-            except Exception as exc:  # auth / import / network at construction
+            except Exception as exc:  # missing key / import / network at construction
                 fallback_note = f"Gemini unavailable ({type(exc).__name__}); using mock engine."
                 exec_client = None
 
