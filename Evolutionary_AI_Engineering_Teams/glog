@@ -1,0 +1,243 @@
+commit 83d1445455d1d9af4770a950f61e6e83f096115d
+Author: Karthik Ravi <karthikravi@Karthiks-MacBook-Pro.local>
+Date:   Sun Jun 28 11:58:13 2026 -0700
+
+    Add FinOps demo recording (mp4) + first-15s clip; gitignore .mov
+    
+    Co-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>
+
+commit a98599a64c5a638e21d70179cc877cb089f036cc
+Author: Karthik Ravi <karthikravi@Karthiks-MacBook-Pro.local>
+Date:   Sun Jun 28 11:37:32 2026 -0700
+
+    Scripted FinOps demo streams into the real Monitor (logs+agents+score 70->85)
+    
+    Remove the separate demo tab; add /api/demo/finops which emits the same
+    PipelineEvents a real run does (gen1: bq/vm/gke @70 -> add_agent sql_agent on
+    'where's sql data' feedback -> gen2 @85). Triggered by a Run FinOps demo button
+    on the Monitor tab; renders via the existing SSE log/agent/score handlers.
+    
+    Co-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>
+
+commit d797b2e7e5b8844a84e321356ec9efde1037f956
+Author: Karthik Ravi <karthikravi@Karthiks-MacBook-Pro.local>
+Date:   Sun Jun 28 11:28:27 2026 -0700
+
+    Scripted FinOps demo tab (gen1 70% -> gen2 85%, adds sql_agent on feedback); seed gemini-3.5-flash
+    
+    Co-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>
+
+commit cab048c75d9207ebce4dd3c97605a2335e341bae
+Author: Karthik Ravi <karthikravi@Karthiks-MacBook-Pro.local>
+Date:   Sun Jun 28 11:24:24 2026 -0700
+
+    Seed model gemini-3.5-flash; Try Agent FinOps demo preset; live eval collection view
+    
+    Co-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>
+
+commit 6f57c90a03b3d99394adc8661208412eaf0d1b0a
+Author: Karthik Ravi <karthikravi@Karthiks-MacBook-Pro.local>
+Date:   Sun Jun 28 11:16:19 2026 -0700
+
+    Add gemini-3.5-flash to model pool; Eval Dataset UI: id chips + status filters
+    
+    - GEMINI_MODEL_POOL now includes gemini-3.5-flash so evolution explores it
+      (was capped at gemini-2.5-pro); all served via the GL API key
+    - Eval Dataset tab: show ec-… id (click-to-copy) on each card, All/Needs/Labeled
+      filters, labeled cases show expected_output read-only
+    
+    Co-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>
+
+commit ebe6476172ce71ab6aeae4af2fd153b93c266fcc
+Author: Karthik Ravi <karthikravi@Karthiks-MacBook-Pro.local>
+Date:   Sun Jun 28 10:55:09 2026 -0700
+
+    Close the loop: /api/agent/try + Try Agent tab with thumbs-down capture
+    
+    Try Agent tab runs the latest evolved harness on a user input (real Gemini),
+    shows the output, and a thumbs-down POSTs to /api/eval-cases/capture -> the
+    case lands in the eval dataset as needs_label for admin/user labeling.
+    
+    Co-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>
+
+commit c5c0160091c2ff054fb8cea892dd5026121ee1c7
+Author: Karthik Ravi <karthikravi@Karthiks-MacBook-Pro.local>
+Date:   Sun Jun 28 10:30:01 2026 -0700
+
+    Real agent execution via working Gemini client; drop redundant model picker
+    
+    - GeminiAPIClient.generate_with_tools (GL API function-calling) so agents run
+      for real (verified live functionCall) instead of the dead Vertex client
+    - cli.py: web callback + _make_pipeline use GeminiAPIClient
+    - UI: remove the Gemini-only 'Base Gemini Model' dropdown (evolution auto-picks
+      per agent); status bar now honest — Agents: Gemini (auto-opt) / Judge: Claude
+    
+    Co-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>
+
+commit 39d5141f96864c2b822b24955029af5aa96e2aaf
+Author: Karthik Ravi <karthikravi@Karthiks-MacBook-Pro.local>
+Date:   Sun Jun 28 10:25:51 2026 -0700
+
+    compose: live source mount for fast redeploys (restart, no rebuild)
+    
+    Co-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>
+
+commit 70bd4ecf199110e824e7a10fea7a970a94b31e2b
+Author: Karthik Ravi <karthikravi@Karthiks-MacBook-Pro.local>
+Date:   Sun Jun 28 10:24:25 2026 -0700
+
+    Wire web_search to Gemini Google Search grounding (no SERP API needed)
+    
+    web_search was an unwired stub returning not_configured (shown as [ERR] in
+    the UI). Implement _tool_web_search using the Generative Language API's
+    google_search grounding via GEMINI_API_KEY — returns a grounded summary +
+    source URLs. Removed from _STUB_TOOLS.
+    
+    Co-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>
+
+commit b0e759e801635d7ddc41c43d194d6ae730c1cb73
+Author: Karthik Ravi <karthikravi@Karthiks-MacBook-Pro.local>
+Date:   Sun Jun 28 10:21:33 2026 -0700
+
+    Docs tab: feedback flywheel + eval dataset; backend-neutral LLM/judge copy
+    
+    Co-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>
+
+commit 112efc6d577258c8d80b214335b0ea65cecf9fec
+Author: Karthik Ravi <karthikravi@Karthiks-MacBook-Pro.local>
+Date:   Sun Jun 28 10:09:44 2026 -0700
+
+    Docs: feedback flywheel, real LLM-judge, eval_cases schema, FinOps example
+    
+    Co-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>
+
+commit ed647dd2a8ac7119d44bf4742929d3779cfa9547
+Author: Karthik Ravi <karthikravi@Karthiks-MacBook-Pro.local>
+Date:   Sun Jun 28 10:09:35 2026 -0700
+
+    Eval-case dataset + labeling flow (feedback flywheel backbone)
+    
+    - EvalCase model + Mongo eval_cases store (save/list/count/label/get_labeled)
+    - Endpoints: capture (negative sentiment -> needs_label), label, list
+    - Admin 'Eval Dataset' tab: needs-label queue + expected-output labeling UI
+    - Reference-based judge grading (grade_against_expected / score_against_expected)
+    - Remove obsolete deterministic-mock test suite
+    
+    Co-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>
+
+commit 19fb2ee0bd05d0457cae35148b40ae5918ba0c12
+Author: Karthik Ravi <karthikravi@Karthiks-MacBook-Pro.local>
+Date:   Sun Jun 28 08:55:44 2026 -0700
+
+    Dockerize app; mount GCP ADC at runtime for Claude judge
+    
+    SA key creation is blocked by org policy (iam.disableServiceAccountKeyCreation),
+    so creds are mounted at runtime (read-only volume), never baked into the image.
+    Compose passes MONGO_URI/GEMINI_API_KEY via .env and ADC via
+    GOOGLE_APPLICATION_CREDENTIALS. Validate ADC at AnthropicVertexClient construction
+    so build_judge_client falls back to the Gemini API-key judge when no GCP creds.
+    
+    Co-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>
+
+commit cca419cd469097b031702291858a993f33424840
+Author: Karthik Ravi <karthikravi@Karthiks-MacBook-Pro.local>
+Date:   Sun Jun 28 08:46:55 2026 -0700
+
+    Real LLM-as-judge ON by default (Claude Sonnet 4.6 via Vertex, Gemini API-key fallback)
+    
+    The judge was defined but imported nowhere, and its only backend was the
+    dead Vertex-Gemini client. Add working clients (AnthropicVertexClient,
+    GeminiAPIClient) and wire a real judge into every pipeline by default,
+    independent of the agent backend, so evolution is driven by real judged
+    scores instead of string-match heuristics.
+    
+    Co-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>
+
+commit 120df8533e45eac538fee05fe4defb1dbc65791a
+Author: Karthik Ravi <karthikravi@Karthiks-MacBook-Pro.local>
+Date:   Sun Jun 28 08:24:43 2026 -0700
+
+    Fix /api/feedback 422 by hoisting FeedbackRequest to module scope
+    
+    With 'from __future__ import annotations', FastAPI resolves the body
+    annotation against module globals. FeedbackRequest was defined locally
+    inside create_app, so it was invisible there and FastAPI treated the
+    body param as a query param -> 422 on every chat feedback submit after
+    evolution completed. Move it to module level like RunRequest.
+    
+    Also make serve bind host configurable via $SERVE_HOST.
+    
+    Co-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>
+
+commit da85cd130fe95b2ad5e4d4378633e329deae6055
+Author: Karthik Ravi <karthikravi@Karthiks-MacBook-Pro.local>
+Date:   Sun Jun 28 08:02:21 2026 -0700
+
+    Load Mongo/Gemini config from .env; gitignore secrets
+    
+    Co-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>
+
+commit c9d9730cb05c12c88f3fd0ea6c798d8678f27ae2
+Author: Karthik Ravi <karthikravi@Karthiks-MacBook-Pro.local>
+Date:   Sun Jun 28 07:42:32 2026 -0700
+
+    Real Gemini execution, evolving prompts, model selection, UI overhaul
+    
+    Backend:
+    - Function-calling tool loop: agents execute via Gemini against a sandboxed
+      workspace (src/runtime/tools.py) with real file/git/shell tools + safe stubs
+    - LLM-as-judge scoring (src/evaluation/judge.py) threaded through the pipeline
+    - Standing evolution rules: prompts grow/specialize each generation; per-agent
+      Gemini model selection across a tiered pool (src/evolution/models.py)
+    - Customizable prompt detail (brief/detailed/exhaustive), token budget scaled
+    - Short, stable workflow ids (wf-<slug>) instead of org_..._v1_v2
+    
+    Frontend (observability/static/index.html):
+    - Monitor 3-zone layout: topology top, logs bottom, metrics right
+    - Collapsible evolution iterations, full workflow graph per generation,
+      visible per-agent evolved prompts + model badges
+    - "Design Studio" tab with per-domain examples, numeric agent input,
+      prompt-detail + model-optimization controls, uiverse-style inputs
+    - Architecture docs with inline SVG diagrams of each evolution stage
+    
+    Tests: 243 passed, 1 skipped (deterministic mock path preserved as test double).
+    
+    Co-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>
+
+commit 34dfe9058e3872b2c75c494100f358a6afaa1cbe
+Author: Karthik Ravi <karthikravi@Karthiks-MacBook-Pro.local>
+Date:   Sun Jun 28 05:18:27 2026 -0700
+
+    Add evolutionary AI organization harness with web UI
+    
+    Implements the full pipeline: NL task -> compiled multi-agent harness ->
+    run -> evaluate -> mine weaknesses -> propose/gate mutations -> evolve.
+    
+    Highlights:
+    - Gemini-backed compiler (thinking disabled, 8192-token budget) with
+      mock-engine execution for fast, scorable, deterministic evolution
+    - Evaluation normalization so Gemini-designed harnesses are scorable
+    - Configurable agent count, model-optimization + redundant-agent mutations
+    - FastAPI + SSE web UI: live agent topology graph, per-generation
+      workflow detail, metrics, domain explainer, feedback continuation
+    - 206 passing tests + 10-prompt benchmark harness
+    
+    Co-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>
+
+commit e5fe9a299074ff2608e487fbe9c87b4abdb83fde
+Author: Anantha Kandrapu <akandrapu@paypal.com>
+Date:   Sat Jun 27 23:23:58 2026 -0700
+
+    test
+
+commit 451e771452a579a5cf67979df48d7a0e1c8313c1
+Author: Anantha Kandrapu <akandrapu@paypal.com>
+Date:   Sat Jun 27 23:23:43 2026 -0700
+
+    test
+
+commit 0280b4acb82de4b02c62f62406ecaea082a14a61
+Author: kartravi <kartravi@paypal.com>
+Date:   Sat Jun 27 22:56:48 2026 -0700
+
+    Initial commit
