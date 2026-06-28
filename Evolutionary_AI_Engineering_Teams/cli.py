@@ -64,7 +64,28 @@ def _make_pipeline(args, store: MongoMemoryStore, event_bus=None) -> EvolutionPi
         shared_memory: dict = {}
         agent_runner = make_gemini_runner(client, shared_memory_ref=shared_memory)
         print(f"[gemini] Using model {model_id} on project {project_id}")
-    return EvolutionPipeline(store, agent_runner=agent_runner, event_bus=event_bus)
+
+    # LLM-as-judge is ON by default and independent of the agent backend:
+    # real judged scores drive evolution instead of the string-match heuristics.
+    judge = _build_default_judge()
+    return EvolutionPipeline(
+        store, agent_runner=agent_runner, event_bus=event_bus, judge=judge
+    )
+
+
+def _build_default_judge():
+    """Construct a real LLM judge, or return None to fall back to heuristics."""
+    try:
+        from src.llm.clients import build_judge_client
+        from src.evaluation.judge import GeminiJudge
+
+        client = build_judge_client()
+        print(f"[judge] LLM-as-judge ON — {client.label}")
+        return GeminiJudge(client)
+    except Exception as exc:
+        print(f"[judge] LLM judge unavailable ({type(exc).__name__}); "
+              f"using deterministic scorer")
+        return None
 
 
 def _print_cycle(result, generation: int = 1) -> None:
@@ -271,15 +292,16 @@ def cmd_serve(args, store: MongoMemoryStore) -> int:
 
         # Build the real-model execution stack when Gemini is available.
         agent_runner = None
-        judge = None
         mutation_client = None
         if gemini_exec:
             from src.gemini.agent_runner import make_gemini_tool_runner
-            from src.evaluation.judge import GeminiJudge
             agent_runner = make_gemini_tool_runner(exec_client, task=harness.task)
-            judge = GeminiJudge(exec_client)
             mutation_client = exec_client
-            print("[web] Running with real Gemini execution (tools + judge + prompt growth).")
+            print("[web] Running with real Gemini execution (tools + prompt growth).")
+
+        # LLM-as-judge is always on (real judged scores), regardless of which
+        # backend ran the agents — defaults to Claude Sonnet 4.6 via Vertex.
+        judge = _build_default_judge()
 
         pipeline = EvolutionPipeline(
             store,
