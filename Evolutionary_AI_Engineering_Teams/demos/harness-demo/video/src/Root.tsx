@@ -7,7 +7,7 @@ export const RemotionRoot = () => {
   return (
     <>
       <Composition
-        id="PRODUCTDemo"
+        id="HarnessDemo"
         component={ProductDemo}
         durationInFrames={Math.max(TIMELINE.totalFrames, 30)}
         fps={TIMELINE.fps}

@@ -5,6 +5,7 @@ __pycache__/
 .eggs/
 build/
 dist/
+!dist/harness-demo.mp4
 
 # Test / tooling caches
 .pytest_cache/

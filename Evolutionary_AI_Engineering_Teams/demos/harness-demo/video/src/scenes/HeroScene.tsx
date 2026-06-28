@@ -1,5 +1,5 @@
 import React from 'react';
-import { AbsoluteFill, OffthreadVideo, interpolate, staticFile, useCurrentFrame } from 'remotion';
+import { AbsoluteFill, interpolate, useCurrentFrame } from 'remotion';
 import { BrandMark } from '../components/BrandMark';
 
 /**
@@ -25,14 +25,8 @@ export const HeroScene: React.FC = () => {
   return (
     <AbsoluteFill style={{ background: '#080614' }}>
       {/* L1 — full-bleed hero loop */}
-      <AbsoluteFill style={{ opacity: bgOp }}>
-        <OffthreadVideo
-          src={staticFile('hero/harness-hero.mp4')}
-          muted
-          loop
-          style={{ width: '100%', height: '100%', objectFit: 'cover' }}
-        />
-      </AbsoluteFill>
+      {/* L1 — deep dark base (no hero video) */}
+      <AbsoluteFill style={{ background: 'radial-gradient(ellipse at 70% 50%, rgba(99,102,241,0.15) 0%, rgba(8,6,20,0) 70%)', opacity: bgOp }} />
 
       {/* L2 — left-side dark gradient overlay so copy reads cleanly */}
       <AbsoluteFill
