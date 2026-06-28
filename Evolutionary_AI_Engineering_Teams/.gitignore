@@ -26,3 +26,8 @@ env/
 
 # Claude Code local state
 .claude/
+
+# Secrets / local config
+.env
+.env.*
+!.env.example

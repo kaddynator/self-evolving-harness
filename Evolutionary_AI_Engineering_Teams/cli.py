@@ -11,11 +11,19 @@ from __future__ import annotations
 
 import argparse
 import json
+import os
 import sys
 from pathlib import Path
 
 import mongomock
 import yaml
+
+try:
+    from dotenv import load_dotenv
+
+    load_dotenv()  # load MONGO_URI / GEMINI_API_KEY from .env if present
+except ImportError:
+    pass
 
 from src.ir.loader import load_harness
 from src.memory.store import MongoMemoryStore
@@ -411,8 +419,8 @@ def build_parser() -> argparse.ArgumentParser:
     )
     parser.add_argument(
         "--mongo-uri",
-        default=None,
-        help="MongoDB URI (omit to use in-memory mock)",
+        default=os.environ.get("MONGO_URI"),
+        help="MongoDB URI (defaults to $MONGO_URI from .env; omit both to use in-memory mock)",
     )
     parser.add_argument(
         "--gemini",
