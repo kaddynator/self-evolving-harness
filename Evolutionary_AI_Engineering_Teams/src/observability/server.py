@@ -409,6 +409,24 @@ def create_app(
         threading.Thread(target=_go, daemon=True).start()
         return {"status": "started"}
 
+    # ── Scripted FinOps demo (streams into the Monitor view) ──
+    @app.post("/api/demo/finops")
+    async def run_finops_demo():
+        if _running.is_set():
+            return {"status": "error", "message": "A run is already in progress."}
+        from src.observability.demo_finops import play_finops_demo
+
+        _running.set()
+
+        def _go():
+            try:
+                play_finops_demo(bus, tracker=_tracker, store=store)
+            finally:
+                _running.clear()
+
+        threading.Thread(target=_go, daemon=True).start()
+        return {"status": "started"}
+
     # ── Eval-case dataset ─────────────────────────────────────
     @app.get("/api/eval-cases")
     async def list_eval_cases(status: Optional[str] = None, agent_id: Optional[str] = None):
