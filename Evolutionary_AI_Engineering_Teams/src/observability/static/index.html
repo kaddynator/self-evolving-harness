@@ -421,6 +421,93 @@ input[type=range]::-webkit-slider-thumb{
 .agent-status.done{color:var(--green)}.agent-status.error{color:var(--red)}
 .tool-chip{display:inline-block;background:rgba(245,158,11,.1);border:1px solid rgba(245,158,11,.2);color:var(--yellow);border-radius:4px;padding:1px 6px;margin:2px 2px 0 0;font-size:9px}
 
+/* ════════════════════════════════════════════════════════════
+   FINOPS DEMO TAB (scripted)
+   ════════════════════════════════════════════════════════════ */
+.fd-content{padding:24px 20px;max-width:960px;margin:0 auto}
+.fd-top{display:flex;align-items:flex-start;justify-content:space-between;gap:16px;margin-bottom:18px}
+.fd-title{
+  font-size:20px;font-weight:700;margin-bottom:4px;
+  background:linear-gradient(135deg,#e2e8f0,#94a3b8);
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;
+}
+.fd-subtitle{color:var(--dim);font-size:11px;max-width:560px}
+.fd-gen-badge{
+  flex-shrink:0;padding:6px 14px;border-radius:20px;font-size:11px;font-weight:bold;letter-spacing:.5px;
+  color:var(--yellow);background:rgba(245,158,11,.1);border:1px solid rgba(245,158,11,.28);
+  transition:all .4s;
+}
+.fd-gen-badge.gen2{color:var(--green);background:rgba(34,197,94,.1);border-color:rgba(34,197,94,.3);box-shadow:0 0 16px rgba(34,197,94,.2)}
+.fd-scorecard{
+  display:flex;align-items:center;gap:22px;
+  background:var(--card-bg);border:1px solid var(--card-border);border-radius:14px;
+  padding:18px 22px;margin-bottom:22px;backdrop-filter:blur(10px);
+}
+.fd-score-left{flex-shrink:0;text-align:center;min-width:120px}
+.fd-score-label{font-size:9px;letter-spacing:1.5px;text-transform:uppercase;color:var(--dim);margin-bottom:4px}
+.fd-score-value{
+  font-size:54px;font-weight:700;line-height:1;
+  background:linear-gradient(135deg,#ef4444,#f87171);
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;
+  filter:drop-shadow(0 0 12px rgba(239,68,68,.4));transition:filter .5s;
+}
+.fd-score-value.passed{
+  background:linear-gradient(135deg,#22c55e,#4ade80);
+  -webkit-background-clip:text;background-clip:text;
+  filter:drop-shadow(0 0 14px rgba(34,197,94,.55));
+}
+.fd-score-pct{font-size:24px;font-weight:600;opacity:.8;margin-left:2px}
+.fd-score-right{flex:1}
+.fd-score-bar-wrap{height:8px;margin:0 0 12px}
+.fd-note{font-size:13px;font-weight:600;transition:color .4s}
+.fd-note-bad{color:var(--red)}
+.fd-note-good{color:var(--green);text-shadow:0 0 12px rgba(34,197,94,.35)}
+.fd-section-label{font-size:9px;letter-spacing:1.5px;text-transform:uppercase;color:var(--dim);margin:0 0 10px}
+.fd-agents{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:12px;margin-bottom:24px}
+.fd-agent{
+  background:var(--card-bg);border:1px solid var(--card-border);border-radius:12px;
+  padding:14px 16px;backdrop-filter:blur(8px);position:relative;transition:all .3s;
+}
+.fd-agent-name{font-weight:bold;color:var(--bright);font-size:13px;margin-bottom:3px}
+.fd-agent-role{color:var(--dim);font-size:10px;margin-bottom:8px;line-height:1.5}
+.fd-agent-tools{display:flex;flex-wrap:wrap}
+.fd-agent.fd-agent-new{
+  border-color:rgba(34,197,94,.45);background:rgba(34,197,94,.06);
+  box-shadow:0 0 24px rgba(34,197,94,.22);
+  animation:fdSlideIn .7s cubic-bezier(.2,.8,.2,1);
+}
+@keyframes fdSlideIn{
+  0%{opacity:0;transform:translateY(14px) scale(.94)}
+  60%{opacity:1;box-shadow:0 0 36px rgba(34,197,94,.4)}
+  100%{opacity:1;transform:translateY(0) scale(1)}
+}
+.fd-new-badge{
+  position:absolute;top:-8px;right:10px;
+  font-size:9px;font-weight:bold;letter-spacing:.5px;color:#052e16;
+  background:linear-gradient(135deg,#22c55e,#4ade80);border-radius:10px;padding:2px 8px;
+  box-shadow:0 0 12px rgba(34,197,94,.5);
+}
+.fd-mutlog{
+  background:rgba(0,0,0,.18);border:1px solid var(--card-border);border-radius:10px;
+  padding:12px 14px;margin-bottom:22px;min-height:44px;font-size:12px;
+}
+.fd-mut-empty{color:var(--dim);font-style:italic}
+.fd-mut-row{
+  color:var(--text);line-height:1.6;padding:4px 0;
+  animation:fdFadeIn .6s ease-out;
+}
+.fd-mut-row .fd-mut-op{color:var(--green);font-weight:bold}
+.fd-mut-row .fd-mut-quote{color:var(--cyan)}
+@keyframes fdFadeIn{0%{opacity:0;transform:translateY(6px)}100%{opacity:1;transform:translateY(0)}}
+.fd-controls{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.fd-btn{width:auto;margin-top:0;padding:9px 18px;font-size:12px}
+.fd-watch{
+  display:none;align-items:center;gap:6px;margin-left:4px;
+  font-size:10px;letter-spacing:.3px;color:var(--cyan);
+}
+.fd-watch.on{display:inline-flex}
+.fd-watch-dot{width:7px;height:7px;border-radius:50%;background:var(--cyan);box-shadow:0 0 8px rgba(6,182,212,.6);animation:pulse 1.4s ease-in-out infinite}
+
 /* Event log */
 #event-log{display:flex;flex-direction:column;gap:1px}
 .ev-row{display:grid;grid-template-columns:65px 135px 1fr;gap:8px;align-items:baseline;padding:3px 6px;border-radius:6px;line-height:1.65;transition:background .15s}
@@ -926,6 +1013,7 @@ input[type=range]::-webkit-slider-thumb{
 <!-- tab bar -->
 <nav id="tab-bar">
   <button class="tab-btn active" data-tab="configure"><span class="tab-dot"></span>Design Studio</button>
+  <button class="tab-btn" data-tab="finopsdemo"><span class="tab-dot"></span>FinOps Demo</button>
   <button class="tab-btn" data-tab="monitor"><span class="tab-dot"></span>Monitor</button>
   <button class="tab-btn" data-tab="evolution"><span class="tab-dot"></span>Evolution</button>
   <button class="tab-btn" data-tab="metrics"><span class="tab-dot"></span>Metrics</button>
@@ -1024,6 +1112,43 @@ input[type=range]::-webkit-slider-thumb{
         <span class="model-info-text">Agents: Gemini (auto-optimized per agent)</span>
         <span class="model-info-id" id="model-info-id">· Judge: Claude Sonnet 4.6</span>
         <span class="model-info-text" style="margin-left:auto;opacity:.5" id="model-info-agents">4 agents · 3 generations</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── FinOps Demo (scripted, no live calls) ───────────────── -->
+  <div id="finopsdemo" class="tab-pane scroll">
+    <div class="fd-content">
+      <div class="fd-top">
+        <div>
+          <h2 class="fd-title">FinOps Cost Optimizer</h2>
+          <p class="fd-subtitle">A self-evolving agent organization. Watch it close a coverage gap from real user feedback.</p>
+        </div>
+        <span id="fd-gen-badge" class="fd-gen-badge">Generation 1</span>
+      </div>
+
+      <div class="fd-scorecard">
+        <div class="fd-score-left">
+          <div class="fd-score-label">Org Score</div>
+          <div id="fd-score-value" class="fd-score-value">70<span class="fd-score-pct">%</span></div>
+        </div>
+        <div class="fd-score-right">
+          <div class="score-bar-wrap fd-score-bar-wrap"><div id="fd-score-bar" class="score-bar-fill failed" style="width:70%"></div></div>
+          <div id="fd-note" class="fd-note fd-note-bad">⚠ Gap: Cloud SQL costs not covered</div>
+        </div>
+      </div>
+
+      <div class="fd-section-label">Agent Organization</div>
+      <div id="fd-agents" class="fd-agents"></div>
+
+      <div class="fd-section-label">Mutation log</div>
+      <div id="fd-mutlog" class="fd-mutlog"></div>
+
+      <div class="fd-controls">
+        <button id="fd-start-btn" class="start-btn fd-btn">▶ Start demo</button>
+        <button id="fd-run2-btn" class="tool-btn fd-btn">▶ Run Iteration 2 (from feedback)</button>
+        <button id="fd-reset-btn" class="tool-btn fd-btn">↺ Reset</button>
+        <span id="fd-watch" class="fd-watch"><span class="fd-watch-dot"></span>watching eval feedback for “sql”…</span>
       </div>
     </div>
   </div>
@@ -1905,6 +2030,9 @@ function switchTab(name){
   // Eval Dataset: load fresh + start live polling; stop polling when leaving.
   if(name==='evaldata'){ loadEvalCases(''); startEvalPolling(); }
   else { stopEvalPolling(); }
+  // FinOps Demo: render current gen + start the scripted feedback-watch poll.
+  if(name==='finopsdemo'){ renderFinopsDemo(); startFinopsWatch(); }
+  else { stopFinopsWatch(); }
   // Re-scroll the event log to the bottom when switching to Monitor
   if(name==='monitor'){
     const log=$('event-log');
@@ -2746,6 +2874,146 @@ async function fetchStateAndSync(){
     renderAgentGraph();
   } catch(_){}
 }
+
+// ════════════════════════════════════════════════════════════
+// FINOPS DEMO TAB (scripted — no live LLM/pipeline calls)
+// ════════════════════════════════════════════════════════════
+// A 100%-reliable, instant two-iteration story for video recording.
+// Iteration 1: 3 agents, 70%, Cloud SQL gap. Iteration 2: evolves to add
+// sql_agent (driven by real eval feedback containing "sql"), 85%, gap closed.
+const FD_AGENTS_GEN1=[
+  {id:'bq_agent', role:'BigQuery Billing Analyst', tools:['bq_tool','web_search']},
+  {id:'vm_agent', role:'Compute Engine Optimizer', tools:['monitoring_tool','compute_tool']},
+  {id:'gke_agent',role:'GKE Utilization Auditor',  tools:['monitoring_tool','gke_tool']},
+];
+const FD_AGENT_SQL={id:'sql_agent', role:'Cloud SQL Cost Analyst', tools:['sql_tool','monitoring_tool']};
+
+let _fdGen=1;             // current generation (1 or 2)
+let _fdWatchTimer=null;   // scripted feedback-watch poll id
+
+function _fdAgentCard(a,isNew){
+  const tools=(a.tools||[]).map(t=>`<span class="tool-chip">${esc(t)}</span>`).join('');
+  return `<div class="fd-agent${isNew?' fd-agent-new':''}">${isNew?'<span class="fd-new-badge">NEW</span>':''}
+      <div class="fd-agent-name">${esc(a.id)}</div>
+      <div class="fd-agent-role">${esc(a.role)}</div>
+      <div class="fd-agent-tools">${tools}</div>
+    </div>`;
+}
+
+// Animate the score number from `from` to `to` (integers, percent).
+let _fdCountRAF=null;
+function _fdAnimateScore(from,to,passed){
+  const el=$('fd-score-value');
+  if(!el)return;
+  if(_fdCountRAF) cancelAnimationFrame(_fdCountRAF);
+  el.classList.toggle('passed',!!passed);
+  const dur=900,t0=performance.now();
+  const step=now=>{
+    const p=Math.min(1,(now-t0)/dur);
+    const ease=1-Math.pow(1-p,3);
+    const v=Math.round(from+(to-from)*ease);
+    el.innerHTML=v+'<span class="fd-score-pct">%</span>';
+    if(p<1) _fdCountRAF=requestAnimationFrame(step);
+  };
+  _fdCountRAF=requestAnimationFrame(step);
+}
+
+function renderFinopsDemo(){
+  const gen2=(_fdGen===2);
+  // Generation badge
+  const badge=$('fd-gen-badge');
+  if(badge){badge.textContent='Generation '+_fdGen;badge.classList.toggle('gen2',gen2);}
+  // Score (set value/bar instantly on a plain render; advance animates separately)
+  const val=$('fd-score-value');
+  if(val){val.innerHTML=(gen2?85:70)+'<span class="fd-score-pct">%</span>';val.classList.toggle('passed',gen2);}
+  const bar=$('fd-score-bar');
+  if(bar){bar.style.width=(gen2?85:70)+'%';bar.classList.toggle('passed',gen2);bar.classList.toggle('failed',!gen2);}
+  // Note line
+  const note=$('fd-note');
+  if(note){
+    if(gen2){note.textContent='✓ Cloud SQL now covered';note.className='fd-note fd-note-good';}
+    else {note.textContent='⚠ Gap: Cloud SQL costs not covered';note.className='fd-note fd-note-bad';}
+  }
+  // Agent cards
+  const agentsEl=$('fd-agents');
+  if(agentsEl){
+    let html=FD_AGENTS_GEN1.map(a=>_fdAgentCard(a,false)).join('');
+    if(gen2) html+=_fdAgentCard(FD_AGENT_SQL,true);
+    agentsEl.innerHTML=html;
+  }
+  // Mutation log
+  const log=$('fd-mutlog');
+  if(log){
+    if(gen2){
+      log.innerHTML=`<div class="fd-mut-row"><span class="fd-mut-op">✚ add_agent: sql_agent</span> — driven by eval feedback: <span class="fd-mut-quote">"where's sql data"</span> (Cloud SQL costs were being missed)</div>`;
+    }else{
+      log.innerHTML='<div class="fd-mut-empty">No mutations yet — baseline organization.</div>';
+    }
+  }
+}
+
+function advanceToGen2(){
+  if(_fdGen===2)return;
+  _fdGen=2;
+  stopFinopsWatch();   // story has advanced; stop the watch
+  // Badge + note + bar flip
+  const badge=$('fd-gen-badge');
+  if(badge){badge.textContent='Generation 2';badge.classList.add('gen2');}
+  const note=$('fd-note');
+  if(note){note.textContent='✓ Cloud SQL now covered';note.className='fd-note fd-note-good';}
+  const bar=$('fd-score-bar');
+  if(bar){bar.classList.remove('failed');bar.classList.add('passed');bar.style.width='85%';}
+  // Score count-up 70 → 85
+  _fdAnimateScore(70,85,true);
+  // Slide the new sql_agent card in
+  const agentsEl=$('fd-agents');
+  if(agentsEl){
+    agentsEl.insertAdjacentHTML('beforeend',_fdAgentCard(FD_AGENT_SQL,true));
+  }
+  // Mutation log entry
+  const log=$('fd-mutlog');
+  if(log){
+    log.innerHTML=`<div class="fd-mut-row"><span class="fd-mut-op">✚ add_agent: sql_agent</span> — driven by eval feedback: <span class="fd-mut-quote">"where's sql data"</span> (Cloud SQL costs were being missed)</div>`;
+  }
+}
+
+function resetFinopsDemo(){
+  _fdGen=1;
+  renderFinopsDemo();
+  // Re-arm the feedback watch if the tab is currently visible
+  const active=document.querySelector('.tab-btn.active')?.dataset.tab;
+  if(active==='finopsdemo') startFinopsWatch();
+}
+
+// AUTO trigger: poll the REAL eval-cases; advance when feedback mentions "sql".
+function startFinopsWatch(){
+  stopFinopsWatch();
+  if(_fdGen!==1) return;            // nothing to watch once advanced
+  const w=$('fd-watch'); if(w) w.classList.add('on');
+  _fdWatchTimer=setInterval(async()=>{
+    try{
+      const r=await fetch('/api/eval-cases');
+      if(!r.ok)return;
+      const data=await r.json();
+      const cases=(data&&data.cases)||[];
+      const hit=cases.some(c=>{
+        const blob=((c.input||'')+' '+(c.feedback||'')).toLowerCase();
+        return blob.indexOf('sql')!==-1;
+      });
+      if(hit) advanceToGen2();
+    }catch(_){/* transient: keep polling */}
+  },3000);
+}
+function stopFinopsWatch(){
+  if(_fdWatchTimer){clearInterval(_fdWatchTimer);_fdWatchTimer=null;}
+  const w=$('fd-watch'); if(w) w.classList.remove('on');
+}
+
+(function(){
+  const s=$('fd-start-btn'); if(s) s.addEventListener('click',resetFinopsDemo);
+  const r2=$('fd-run2-btn'); if(r2) r2.addEventListener('click',advanceToGen2);
+  const rs=$('fd-reset-btn');if(rs) rs.addEventListener('click',resetFinopsDemo);
+})();
 
 // ════════════════════════════════════════════════════════════
 // TRY AGENT TAB
