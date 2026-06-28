@@ -107,7 +107,8 @@ PARAM_SCHEMAS: Dict[str, Dict[str, Any]] = {
 }
 
 # Tools that hit external services we have not wired up — safe stubs.
-_STUB_TOOLS = {"web_search", "read_url", "query_db", "send_message"}
+# web_search IS wired (Gemini Google Search grounding); see _tool_web_search.
+_STUB_TOOLS = {"read_url", "query_db", "send_message"}
 
 
 def tool_declarations_for(agent_tools: List[str]) -> List[Dict[str, Any]]:
@@ -249,6 +250,49 @@ class ToolSandbox:
             p.unlink()
             return {"path": args["path"], "deleted": True}
         return {"error": "file_not_found", "path": args["path"]}
+
+    # -- external: real web search ----------------------------------------
+
+    def _tool_web_search(self, args: Dict[str, Any]) -> Dict[str, Any]:
+        """Real web search via Gemini's built-in Google Search grounding.
+
+        Uses GEMINI_API_KEY (the Generative Language API key) — no separate
+        SERP/search API required. Returns a grounded summary + source URLs.
+        Falls back to a clear error (never raises) if the key is missing.
+        """
+        query = (args.get("query") or "").strip()
+        if not query:
+            return {"error": "missing_query", "tool": "web_search"}
+        key = os.environ.get("GEMINI_API_KEY", "")
+        if not key:
+            return {"error": "no_search_backend", "tool": "web_search",
+                    "detail": "GEMINI_API_KEY not set"}
+        import requests
+
+        model = os.environ.get("SEARCH_MODEL", "gemini-2.5-flash")
+        url = (f"https://generativelanguage.googleapis.com/v1beta/models/"
+               f"{model}:generateContent?key={key}")
+        payload = {
+            "contents": [{"role": "user", "parts": [{"text": query}]}],
+            "tools": [{"google_search": {}}],
+        }
+        try:
+            r = requests.post(url, json=payload, timeout=30)
+        except Exception as e:
+            return {"error": f"{type(e).__name__}: {e}", "tool": "web_search"}
+        if not r.ok:
+            return {"error": f"search_http_{r.status_code}", "tool": "web_search",
+                    "detail": r.text[:200]}
+        cand = (r.json().get("candidates") or [{}])[0]
+        text = "".join(
+            p.get("text", "") for p in cand.get("content", {}).get("parts", [])
+        )
+        sources = []
+        for chunk in cand.get("groundingMetadata", {}).get("groundingChunks", []):
+            web = chunk.get("web") or {}
+            if web.get("uri"):
+                sources.append({"title": web.get("title", ""), "uri": web["uri"]})
+        return {"summary": self._cap(text), "sources": sources[:8]}
 
     # -- execution tools ---------------------------------------------------
 
