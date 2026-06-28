@@ -201,6 +201,11 @@ class RunRequest(BaseModel):
     optimize_models: bool = True
 
 
+class FeedbackRequest(BaseModel):
+    feedback: str
+    generations: int = 2
+
+
 # ---------------------------------------------------------------------------
 # FastAPI app factory
 # ---------------------------------------------------------------------------
@@ -304,10 +309,6 @@ def create_app(
         }
 
     # ── Feedback continuation ─────────────────────────────────
-    class FeedbackRequest(BaseModel):
-        feedback: str
-        generations: int = 2
-
     @app.post("/api/feedback")
     async def continue_with_feedback(req: FeedbackRequest):
         if _running.is_set():

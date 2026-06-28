@@ -188,7 +188,7 @@ def cmd_serve(args, store: MongoMemoryStore) -> int:
     tracker = PipelineStateTracker()
     bus.subscribe(tracker.on_event)
 
-    host, port = "127.0.0.1", getattr(args, "port", 8765)
+    host, port = os.environ.get("SERVE_HOST", "127.0.0.1"), getattr(args, "port", 8765)
     url = f"http://{host}:{port}"
 
     # ── Run callback (called from POST /api/run in the web UI) ──
