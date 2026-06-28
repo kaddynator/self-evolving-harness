@@ -1,0 +1,318 @@
+organization:
+  id: org_rate_limiter_v1
+  name: BasicEngineeringHarness
+  version: 1
+  parent_id: null
+  objective: Implement a per-user API rate limiter.
+  domain: software_engineering
+  constraints:
+    - Keep existing tests passing.
+    - Avoid changing public API contracts.
+    - Keep the patch small and localized.
+  assumptions:
+    - The repository has a working test command.
+    - The task can be completed in one execution cycle.
+
+task:
+  id: task_rate_limiter
+  title: Add per-user rate limiting
+  description: Add a max 5 requests per minute rate limit per user to the API endpoint.
+  inputs:
+    repo_path: /workspace/demo-repo
+    test_command: npm test
+  success_conditions:
+    - Existing tests pass.
+    - New rate limiter tests pass.
+    - The API returns 429 after the limit is exceeded.
+  artifacts_expected:
+    - code_patch
+    - test_results
+    - execution_trace
+
+agents:
+  - id: requirements_agent
+    name: Requirements Agent
+    role: Extract acceptance criteria and constraints.
+    responsibilities:
+      - Read the task.
+      - Identify explicit requirements.
+      - Identify implicit constraints.
+      - Produce acceptance criteria.
+    prompt: |
+      You are the Requirements Agent.
+      Extract acceptance criteria from the task.
+      Do not write code.
+      Output only requirements, constraints, and risks.
+    tools:
+      - read_files
+      - list_files
+    budget:
+      max_tool_calls: 8
+      max_runtime_seconds: 120
+    memory_policy:
+      read_shared: true
+      write_shared: true
+    output_contract:
+      type: markdown
+      required_sections:
+        - Acceptance Criteria
+        - Constraints
+        - Risks
+
+  - id: coder_agent
+    name: Coder Agent
+    role: Implement the required code change.
+    responsibilities:
+      - Read acceptance criteria.
+      - Inspect relevant source files.
+      - Implement the smallest working patch.
+      - Avoid unrelated changes.
+    prompt: |
+      You are the Coder Agent.
+      Implement the requested feature with the smallest safe change.
+      Preserve existing API behavior.
+      Do not modify unrelated files.
+      Before finishing, ensure the required artifact exists and tests are run.
+    tools:
+      - read_files
+      - edit_files
+      - run_tests
+      - git_diff
+    budget:
+      max_tool_calls: 20
+      max_runtime_seconds: 300
+    memory_policy:
+      read_shared: true
+      write_shared: true
+    output_contract:
+      type: patch
+      required_sections:
+        - Files Changed
+        - Patch Summary
+        - Risks
+
+  - id: tester_agent
+    name: Tester Agent
+    role: Verify the implementation.
+    responsibilities:
+      - Run existing tests.
+      - Add or run feature tests.
+      - Report failures clearly.
+    prompt: |
+      You are the Tester Agent.
+      Verify the patch against existing and new requirements.
+      Do not modify production code unless explicitly asked.
+    tools:
+      - read_files
+      - edit_files
+      - run_tests
+    budget:
+      max_tool_calls: 15
+      max_runtime_seconds: 240
+    memory_policy:
+      read_shared: true
+      write_shared: true
+    output_contract:
+      type: markdown
+      required_sections:
+        - Test Results
+        - Failures
+        - Confidence
+
+  - id: reviewer_agent
+    name: Reviewer Agent
+    role: Review quality and risk of the patch.
+    responsibilities:
+      - Inspect the diff.
+      - Check for unnecessary changes.
+      - Check whether requirements are satisfied.
+    prompt: |
+      You are the Reviewer Agent.
+      Review the final patch for correctness, minimality, and risk.
+      Be strict but practical.
+    tools:
+      - read_files
+      - git_diff
+    budget:
+      max_tool_calls: 10
+      max_runtime_seconds: 120
+    memory_policy:
+      read_shared: true
+      write_shared: true
+    output_contract:
+      type: markdown
+      required_sections:
+        - Approval
+        - Concerns
+        - Suggested Changes
+
+communication:
+  topology: custom_graph
+  edges:
+    - from: requirements_agent
+      to: coder_agent
+      type: blocking
+      artifact: acceptance_criteria
+
+    - from: coder_agent
+      to: tester_agent
+      type: blocking
+      artifact: patch
+
+    - from: tester_agent
+      to: reviewer_agent
+      type: blocking
+      artifact: test_report
+
+    - from: reviewer_agent
+      to: coder_agent
+      type: feedback
+      max_rounds: 1
+
+  shared_memory:
+    enabled: true
+    store:
+      - acceptance_criteria
+      - patches
+      - test_results
+      - review_notes
+      - lessons
+
+execution:
+  mode: phased
+  phases:
+    - name: understand
+      agents:
+        - requirements_agent
+      parallel: false
+
+    - name: implement
+      agents:
+        - coder_agent
+      parallel: false
+
+    - name: verify
+      agents:
+        - tester_agent
+        - reviewer_agent
+      parallel: true
+
+  retry_policy:
+    max_retries: 1
+    retry_on:
+      - tests_failed
+      - patch_rejected
+
+  stopping_conditions:
+    - all_success_conditions_met
+    - max_runtime_reached
+    - max_tool_calls_reached
+
+runtime_policies:
+  max_repeated_tool_errors: 2
+  max_tool_calls_before_reflection: 20
+  require_artifact_before_finish: true
+  verify_before_conclude: true
+  prevent_identical_retry: true
+  exploration_to_implementation_threshold: 12
+
+failure_recovery:
+  on_tool_error: Inspect the error, change strategy, and do not repeat the exact same command.
+  on_missing_artifact: Create the required artifact immediately before continuing.
+  on_test_failure: Read the failing assertion and make the smallest targeted fix.
+  on_timeout_risk: Stop exploration and produce the best verified artifact.
+
+evaluation:
+  metrics:
+    - name: tests_pass
+      type: boolean
+      source: test_runner
+      weight: 50
+
+    - name: feature_works
+      type: boolean
+      source: generated_tests
+      weight: 30
+
+    - name: reviewer_acceptance
+      type: boolean
+      source: reviewer_agent
+      weight: 20
+
+    - name: tool_calls
+      type: numeric
+      source: runtime_trace
+      weight: -1
+
+    - name: diff_size
+      type: numeric
+      source: git_diff
+      weight: -0.5
+
+  binary_checks:
+    - id: preserves_existing_behavior
+      question: Do all pre-existing tests pass?
+      verifier: test_runner
+
+    - id: satisfies_new_requirement
+      question: Does the implementation satisfy the new rate limiter requirement?
+      verifier: generated_tests
+
+    - id: minimal_patch
+      question: Is the patch reasonably small and localized?
+      verifier: llm_judge
+
+  scoring:
+    formula: weighted_sum
+    success_threshold: 70
+
+  validation_gate:
+    require_no_regression:
+      - tests_pass
+      - feature_works
+    require_improvement_any:
+      - total_score
+      - tool_calls
+      - runtime_seconds
+    max_runtime_seconds: 600
+
+weakness_mining:
+  enabled: true
+  failure_signature_fields:
+    - verifier_cause
+    - agent_behavior
+    - mechanism
+  clustering:
+    method: exact_signature
+    min_cluster_size: 1
+
+mutation_policy:
+  allowed_mutations:
+    - add_agent
+    - remove_agent
+    - modify_prompt
+    - modify_tools
+    - reorder_edges
+    - change_topology
+    - adjust_budget
+    - modify_runtime_policy
+    - modify_failure_recovery
+  protected_components:
+    - task.success_conditions
+    - evaluation.validation_gate
+  proposal_width: 3
+  exploration_strategy: validation_gated_mutate_winner
+
+observability:
+  trace_level: detailed
+  log_events:
+    - agent_started
+    - agent_finished
+    - tool_called
+    - artifact_created
+    - evaluation_completed
+    - weakness_mined
+    - mutation_proposed
+    - mutation_validated
+    - mutation_applied
+  collect_artifacts: true

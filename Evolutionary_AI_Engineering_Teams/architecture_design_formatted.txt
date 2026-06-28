@@ -1,0 +1,182 @@
+EVOLUTIONARY AI ENGINEERING TEAMS
+==================================
+
+1. CORE ARCHITECTURE
+--------------------
+
+Task Specification
+    |
+    v
+Team Compiler
+    - Creates agents
+    - Assigns prompts
+    - Assigns tools
+    - Defines communication graph
+    |
+    v
+Runtime
+    - Executes agents inside isolated sandboxes
+    |
+    v
+Evaluator
+    - Scores task success
+    - Measures tool calls
+    - Measures runtime
+    - Measures code quality
+    |
+    v
+Evolution Engine
+    - Adds agents
+    - Removes agents
+    - Updates prompts
+    - Changes tool permissions
+    - Changes execution order
+    |
+    v
+Memory (MongoDB)
+    - Stores organization versions
+    - Stores evaluation scores
+    - Stores lessons learned
+    - Stores successful organization patterns
+
+
+2. RECOMMENDED DEMO TASK
+------------------------
+
+Implement a small software engineering feature in a deterministic repository.
+
+Example:
+    - Build a rate limiter for an API endpoint.
+    - Existing tests must continue passing.
+    - New functionality must satisfy acceptance criteria.
+
+
+3. INITIAL ORGANIZATION
+-----------------------
+
+    Planner Agent
+          |
+          v
+      Coder Agent
+          |
+          v
+      Tester Agent
+          |
+          v
+     Reviewer Agent
+
+
+4. EVOLUTION EXAMPLE
+--------------------
+
+Run 1
+------
+Team V1
+    Agents:
+        - Planner
+        - Coder
+        - Tester
+        - Reviewer
+
+Result:
+    - Failed
+
+Mutation:
+    + Add Requirements Agent
+
+
+Run 2
+------
+Team V2
+    Agents:
+        - Requirements
+        - Planner
+        - Coder
+        - Tester
+        - Reviewer
+
+Result:
+    - Tests pass
+    - Too many tool calls
+
+Mutation:
+    * Improve Reviewer prompt
+    * Reduce Planner responsibilities
+
+
+Run 3
+------
+Team V3
+    Agents:
+        - Requirements
+        - Coder
+        - Tester
+        - Reviewer
+
+Result:
+    - Tests pass
+    - Fewer tool calls
+    - Faster execution
+
+
+5. ORGANIZATION SPECIFICATION
+-----------------------------
+
+OrganizationSpec
+    Agents
+    Prompts
+    Tool Permissions
+    Communication Graph
+    Execution Order
+    Evaluation Metrics
+
+
+6. EVOLUTION OPERATIONS
+-----------------------
+
+    + Add agent
+    - Remove agent
+    * Change prompt
+    * Change tool access
+    * Change execution order
+    * Adjust execution budget
+
+
+7. SPONSOR MAPPING
+------------------
+
+Gemini
+    - Team compilation
+    - Prompt generation
+    - Agent mutations
+    - Code generation
+
+MongoDB
+    - Persistent organization memory
+    - Evaluation history
+    - Learned organization patterns
+
+DigitalOcean
+    - Parallel sandbox execution
+    - Isolated worker environments
+
+
+8. THREE-MINUTE DEMO
+--------------------
+
+1. Present engineering task.
+2. Show Team V1 fail.
+3. Show Evolution Engine mutate the organization.
+4. Execute Team V2 / V3.
+5. Compare:
+       - Number of agents
+       - Tool calls
+       - Runtime
+       - Test success
+6. Show MongoDB storing organizational knowledge.
+
+Closing Message
+---------------
+
+"We are not optimizing answers.
+We are evolving AI engineering organizations."
