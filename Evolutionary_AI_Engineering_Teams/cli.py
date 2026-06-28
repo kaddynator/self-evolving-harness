@@ -320,6 +320,7 @@ def cmd_serve(args, store: MongoMemoryStore) -> int:
         kwargs={
             "bus": bus, "host": host, "port": port,
             "tracker": tracker, "run_callback": _web_run_callback,
+            "store": store,  # enables /api/eval-cases endpoints
         },
         daemon=True,
     )

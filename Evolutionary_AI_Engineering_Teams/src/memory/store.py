@@ -16,6 +16,7 @@ from src.memory.serializers import (
     gate_decision_to_doc,
     lesson_doc,
 )
+from src.eval_dataset.models import EvalCase, NEEDS_LABEL, LABELED
 
 _DEFAULT_URI = "mongodb://localhost:27017"
 _DEFAULT_DB = "harness_memory"
@@ -45,6 +46,7 @@ class MongoMemoryStore:
         self._db["evaluations"].create_index([("harness_id", 1), ("total_score", DESCENDING)])
         self._db["mutations"].create_index([("harness_id", 1), ("accepted", 1)])
         self._db["lessons"].create_index([("harness_id", 1)])
+        self._db["eval_cases"].create_index([("agent_id", 1), ("status", 1)])
 
     # ------------------------------------------------------------------
     # Organizations
@@ -144,6 +146,70 @@ class MongoMemoryStore:
 
     def get_lessons(self, harness_id: str) -> List[Dict[str, Any]]:
         return list(self._db["lessons"].find({"harness_id": harness_id}, {"_id": 0}))
+
+    # ------------------------------------------------------------------
+    # Eval cases (dataset of labeled / unlabeled production cases)
+    # ------------------------------------------------------------------
+
+    @staticmethod
+    def _eval_doc_to_api(doc: Dict[str, Any]) -> Dict[str, Any]:
+        """Map a raw eval_cases doc to an API-friendly dict (``_id`` -> ``id``)."""
+        out = dict(doc)
+        if "_id" in out:
+            out["id"] = out.pop("_id")
+        return out
+
+    def save_eval_case(self, case: EvalCase) -> str:
+        """Upsert an :class:`EvalCase` into ``eval_cases``; return its id."""
+        doc = case.to_doc()
+        self._db["eval_cases"].replace_one({"_id": doc["_id"]}, doc, upsert=True)
+        return doc["_id"]
+
+    def get_eval_case(self, case_id: str) -> Optional[Dict[str, Any]]:
+        doc = self._db["eval_cases"].find_one({"_id": case_id})
+        return self._eval_doc_to_api(doc) if doc else None
+
+    def list_eval_cases(
+        self,
+        status: Optional[str] = None,
+        agent_id: Optional[str] = None,
+    ) -> List[Dict[str, Any]]:
+        """List eval cases, optionally filtered by status and/or agent_id."""
+        query: Dict[str, Any] = {}
+        if status is not None:
+            query["status"] = status
+        if agent_id is not None:
+            query["agent_id"] = agent_id
+        return [self._eval_doc_to_api(d) for d in self._db["eval_cases"].find(query)]
+
+    def count_eval_cases(self, agent_id: Optional[str] = None) -> Dict[str, int]:
+        """Return counts of needs_label / labeled / total cases."""
+        base: Dict[str, Any] = {}
+        if agent_id is not None:
+            base["agent_id"] = agent_id
+        needs = self._db["eval_cases"].count_documents({**base, "status": NEEDS_LABEL})
+        labeled = self._db["eval_cases"].count_documents({**base, "status": LABELED})
+        total = self._db["eval_cases"].count_documents(base)
+        return {"needs_label": needs, "labeled": labeled, "total": total}
+
+    def get_labeled_cases(self, agent_id: Optional[str] = None) -> List[Dict[str, Any]]:
+        """Return all labeled cases (usable as references), optionally per-agent."""
+        return self.list_eval_cases(status=LABELED, agent_id=agent_id)
+
+    def label_eval_case(
+        self,
+        case_id: str,
+        expected_output: str,
+        labeled_by: str = "admin",
+    ) -> Optional[Dict[str, Any]]:
+        """Label a case with its expected output; return the updated doc or None."""
+        doc = self._db["eval_cases"].find_one({"_id": case_id})
+        if not doc:
+            return None
+        case = EvalCase.from_doc(doc)
+        case.label(expected_output, labeled_by=labeled_by)
+        self.save_eval_case(case)
+        return self._eval_doc_to_api(case.to_doc())
 
     # ------------------------------------------------------------------
     # Summary helpers (for demo / compiler context)

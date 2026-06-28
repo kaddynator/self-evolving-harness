@@ -222,6 +222,73 @@ input[type=range]::-webkit-slider-thumb{
 #cfg-status.ok{color:var(--green)}#cfg-status.err{color:var(--red)}
 
 /* ════════════════════════════════════════════════════════════
+   EVAL DATASET TAB
+   ════════════════════════════════════════════════════════════ */
+.eval-content{padding:24px 20px;max-width:860px;margin:0 auto}
+.eval-header{display:flex;align-items:flex-start;justify-content:space-between;gap:16px;margin-bottom:16px}
+.eval-title{
+  font-size:18px;font-weight:700;margin-bottom:4px;
+  background:linear-gradient(135deg,#e2e8f0,#94a3b8);
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;
+}
+.eval-subtitle{color:var(--dim);font-size:11px;max-width:520px}
+.eval-stats{display:flex;gap:10px;margin-bottom:18px;flex-wrap:wrap}
+.eval-chip{
+  display:flex;align-items:baseline;gap:6px;
+  padding:6px 12px;border-radius:20px;
+  background:rgba(6,182,212,.08);border:1px solid rgba(6,182,212,.2);
+}
+.eval-chip-num{color:var(--cyan);font-weight:bold;font-size:14px}
+.eval-chip-label{color:var(--dim);font-size:10px;letter-spacing:.5px;text-transform:uppercase}
+.eval-card{
+  backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);
+  background:var(--card-bg);border:1px solid var(--card-border);border-radius:12px;
+  padding:16px;margin-bottom:14px;
+}
+.eval-card-meta{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:10px;font-size:10px;color:var(--dim)}
+.eval-tag{
+  padding:2px 8px;border-radius:12px;border:1px solid var(--card-border);
+  letter-spacing:.5px;text-transform:uppercase;
+}
+.eval-tag.sentiment-positive{color:var(--green);border-color:rgba(34,197,94,.3);background:rgba(34,197,94,.08)}
+.eval-tag.sentiment-negative{color:var(--red);border-color:rgba(239,68,68,.3);background:rgba(239,68,68,.08)}
+.eval-tag.sentiment-neutral{color:var(--yellow);border-color:rgba(245,158,11,.3);background:rgba(245,158,11,.08)}
+.eval-field-label{font-size:9px;letter-spacing:1.2px;text-transform:uppercase;color:var(--dim);margin:10px 0 4px}
+.eval-text{
+  font-size:12px;line-height:1.6;color:var(--text);white-space:pre-wrap;word-break:break-word;
+  background:rgba(255,255,255,.025);border:1px solid var(--card-border);
+  border-radius:8px;padding:8px 10px;
+}
+.eval-text.actual{color:var(--bright)}
+.eval-feedback{font-size:11px;color:var(--text);font-style:italic;margin-top:4px}
+.eval-snapshot{margin-top:10px}
+.eval-snapshot summary{cursor:pointer;font-size:10px;color:var(--cyan);letter-spacing:.5px;text-transform:uppercase}
+.eval-snapshot pre{
+  margin-top:6px;font-size:11px;line-height:1.5;color:var(--text);
+  background:rgba(0,0,0,.25);border:1px solid var(--card-border);border-radius:8px;
+  padding:10px;overflow-x:auto;max-height:240px;
+}
+.eval-label-area{
+  width:100%;margin-top:6px;background:rgba(255,255,255,.04);
+  border:1px solid var(--card-border);border-radius:8px;padding:8px 12px;
+  color:var(--bright);font-family:var(--font);font-size:12px;line-height:1.6;
+  outline:none;transition:border-color .2s,box-shadow .2s;resize:vertical;min-height:72px;
+}
+.eval-label-area:focus{border-color:rgba(6,182,212,.4);box-shadow:0 0 0 3px rgba(6,182,212,.1)}
+.eval-card-actions{display:flex;align-items:center;gap:12px;margin-top:10px}
+.eval-save-btn{
+  padding:8px 18px;border-radius:8px;
+  border:1px solid rgba(6,182,212,.3);
+  background:linear-gradient(135deg,rgba(6,182,212,.15),rgba(168,85,247,.12));
+  color:var(--bright);font-family:var(--font);font-size:12px;font-weight:bold;
+  cursor:pointer;letter-spacing:.5px;transition:all .2s;
+}
+.eval-save-btn:hover{background:linear-gradient(135deg,rgba(6,182,212,.25),rgba(168,85,247,.2));box-shadow:0 0 16px rgba(6,182,212,.2)}
+.eval-save-btn:disabled{opacity:.4;cursor:not-allowed}
+.eval-card-err{color:var(--red);font-size:11px;min-height:14px}
+.eval-empty{text-align:center;color:var(--dim);font-style:italic;padding:40px 20px;font-size:12px}
+
+/* ════════════════════════════════════════════════════════════
    MONITOR TAB
    ════════════════════════════════════════════════════════════ */
 #monitor{flex:1;grid-template-columns:248px 1fr 268px;overflow:hidden}
@@ -770,6 +837,7 @@ input[type=range]::-webkit-slider-thumb{
   <button class="tab-btn" data-tab="monitor"><span class="tab-dot"></span>Monitor</button>
   <button class="tab-btn" data-tab="evolution"><span class="tab-dot"></span>Evolution</button>
   <button class="tab-btn" data-tab="metrics"><span class="tab-dot"></span>Metrics</button>
+  <button class="tab-btn" data-tab="evaldata"><span class="tab-dot"></span>Eval Dataset</button>
   <button class="tab-btn" data-tab="docs"><span class="tab-dot"></span>Docs</button>
   <div id="run-indicator"><span class="ri-dot"></span><span id="ri-text">idle</span></div>
 </nav>
@@ -981,6 +1049,27 @@ input[type=range]::-webkit-slider-thumb{
           <tbody id="metrics-tbody"><tr><td colspan="7" style="text-align:center;padding:20px;color:var(--dim);font-style:italic">Start a run to see metrics</td></tr></tbody>
         </table>
       </div>
+    </div>
+  </div>
+
+  <!-- ── Eval Dataset ────────────────────────────────────────── -->
+  <div id="evaldata" class="tab-pane scroll">
+    <div class="eval-content">
+      <div class="eval-header">
+        <div>
+          <h2 class="eval-title">Eval Dataset</h2>
+          <p class="eval-subtitle">Label customer cases flagged by the feedback flywheel. Saved labels feed future evaluation runs.</p>
+        </div>
+        <button id="eval-refresh-btn" class="tool-btn">↻ Refresh queue</button>
+      </div>
+
+      <div class="eval-stats" id="eval-stats">
+        <div class="eval-chip"><span class="eval-chip-num" id="eval-count-needs">—</span><span class="eval-chip-label">needs label</span></div>
+        <div class="eval-chip"><span class="eval-chip-num" id="eval-count-labeled">—</span><span class="eval-chip-label">labeled</span></div>
+        <div class="eval-chip"><span class="eval-chip-num" id="eval-count-total">—</span><span class="eval-chip-label">total</span></div>
+      </div>
+
+      <div id="eval-list"></div>
     </div>
   </div>
 
@@ -1552,6 +1641,7 @@ function switchTab(name){
   if(pane) pane.classList.add('active');
   if(name==='evolution') renderEvolution();
   if(name==='metrics')   renderMetrics();
+  if(name==='evaldata')  loadEvalCases();
   // Re-scroll the event log to the bottom when switching to Monitor
   if(name==='monitor'){
     const log=$('event-log');
@@ -2393,6 +2483,128 @@ async function fetchStateAndSync(){
     renderAgentGraph();
   } catch(_){}
 }
+
+// ════════════════════════════════════════════════════════════
+// EVAL DATASET TAB
+// ════════════════════════════════════════════════════════════
+// Drives the feedback-flywheel labeling flow. Backend endpoints are
+// being built in parallel — fetch defensively and degrade gracefully.
+function _evalSetCounts(counts){
+  counts=counts||{};
+  const fmt=v=>(v===undefined||v===null)?'—':v;
+  $('eval-count-needs').textContent=fmt(counts.needs_label);
+  $('eval-count-labeled').textContent=fmt(counts.labeled);
+  $('eval-count-total').textContent=fmt(counts.total);
+}
+
+function _evalPrettyJson(snap){
+  if(snap===undefined||snap===null||snap==='')return null;
+  try{
+    const obj=(typeof snap==='string')?JSON.parse(snap):snap;
+    return JSON.stringify(obj,null,2);
+  }catch(_){
+    return (typeof snap==='string')?snap:String(snap);
+  }
+}
+
+function renderEvalCases(cases){
+  const list=$('eval-list');
+  if(!list)return;
+  list.innerHTML='';
+  if(!cases||!cases.length){
+    list.innerHTML='<div class="eval-empty">✓ No cases waiting to be labeled.</div>';
+    return;
+  }
+  cases.forEach(c=>{
+    const card=document.createElement('div');
+    card.className='eval-card';
+    card.dataset.caseId=c.id;
+    const sentiment=(c.sentiment||'').toLowerCase();
+    const sentClass=['positive','negative','neutral'].includes(sentiment)?('sentiment-'+sentiment):'';
+    const snapText=_evalPrettyJson(c.context_snapshot);
+    const snapHtml=snapText
+      ? `<details class="eval-snapshot"><summary>Context snapshot</summary><pre>${esc(snapText)}</pre></details>`
+      : '';
+    const metaBits=[];
+    if(c.agent_id) metaBits.push(`<span class="eval-tag">${esc(c.agent_id)}</span>`);
+    if(c.sentiment) metaBits.push(`<span class="eval-tag ${sentClass}">${esc(c.sentiment)}</span>`);
+    if(c.created_at) metaBits.push(`<span>${esc(c.created_at)}</span>`);
+    card.innerHTML=`
+      <div class="eval-card-meta">${metaBits.join('')}</div>
+      <div class="eval-field-label">Customer input</div>
+      <div class="eval-text">${esc(c.input==null?'':c.input)}</div>
+      <div class="eval-field-label">Agent actual output</div>
+      <div class="eval-text actual">${esc(c.actual_output==null?'':c.actual_output)}</div>
+      ${c.feedback?`<div class="eval-field-label">Feedback</div><div class="eval-feedback">${esc(c.feedback)}</div>`:''}
+      ${snapHtml}
+      <div class="eval-field-label">Expected output — what should it have said?</div>
+      <textarea class="eval-label-area" placeholder="Write the ideal answer for this case…"></textarea>
+      <div class="eval-card-actions">
+        <button class="eval-save-btn">Save label</button>
+        <span class="eval-card-err"></span>
+      </div>`;
+    const btn=card.querySelector('.eval-save-btn');
+    const ta=card.querySelector('.eval-label-area');
+    const errEl=card.querySelector('.eval-card-err');
+    btn.addEventListener('click',()=>saveEvalLabel(c.id,ta,btn,errEl,card));
+    list.appendChild(card);
+  });
+}
+
+async function saveEvalLabel(id,ta,btn,errEl,card){
+  const expected=ta.value.trim();
+  errEl.textContent='';
+  if(!expected){errEl.textContent='Enter the expected output first.';ta.focus();return;}
+  btn.disabled=true;const orig=btn.textContent;btn.textContent='Saving…';
+  try{
+    const r=await fetch(`/api/eval-cases/${encodeURIComponent(id)}/label`,{
+      method:'POST',headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({expected_output:expected,labeled_by:'admin'}),
+    });
+    if(!r.ok)throw new Error('HTTP '+r.status);
+    const res=await r.json().catch(()=>({}));
+    if(res && res.status && res.status!=='labeled') throw new Error(res.message||('status: '+res.status));
+    // Success — remove the card and refresh counts.
+    card.remove();
+    if(!$('eval-list').children.length){
+      $('eval-list').innerHTML='<div class="eval-empty">✓ No cases waiting to be labeled.</div>';
+    }
+    loadEvalCounts();
+  }catch(e){
+    btn.disabled=false;btn.textContent=orig;
+    errEl.textContent='Could not save label — '+(e.message||'try again.');
+  }
+}
+
+// Lightweight counts-only refresh (after a successful label save).
+async function loadEvalCounts(){
+  try{
+    const r=await fetch('/api/eval-cases?status=needs_label');
+    if(!r.ok)return;
+    const data=await r.json();
+    _evalSetCounts(data.counts);
+  }catch(_){}
+}
+
+async function loadEvalCases(){
+  const list=$('eval-list');
+  if(list && !list.children.length) list.innerHTML='<div class="eval-empty">Loading…</div>';
+  try{
+    const r=await fetch('/api/eval-cases?status=needs_label');
+    if(!r.ok)throw new Error('HTTP '+r.status);
+    const data=await r.json();
+    _evalSetCounts(data.counts);
+    renderEvalCases(data.cases);
+  }catch(e){
+    _evalSetCounts(null);
+    if(list) list.innerHTML='<div class="eval-empty">Could not load the eval queue. The endpoint may not be available yet — try Refresh.</div>';
+  }
+}
+
+(function(){
+  const rb=$('eval-refresh-btn');
+  if(rb) rb.addEventListener('click',loadEvalCases);
+})();
 
 // ════════════════════════════════════════════════════════════
 // FEEDBACK CONTINUATION

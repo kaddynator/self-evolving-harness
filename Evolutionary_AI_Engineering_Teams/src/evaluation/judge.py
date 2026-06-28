@@ -23,6 +23,14 @@ _JUDGE_SYSTEM = (
 )
 
 
+_REFERENCE_JUDGE_SYSTEM = (
+    "You are a strict, fair reference grader for AI agent outputs.\n"
+    "You compare an agent's ACTUAL output against a human-approved EXPECTED output.\n"
+    "Judge ONLY on semantic correctness and coverage of the actual relative to the "
+    "expected. Respond with a single JSON object."
+)
+
+
 def _cap(value: Any, n: int = 1200) -> str:
     s = value if isinstance(value, str) else json.dumps(value, default=str)
     return s if len(s) <= n else s[:n] + "…"
@@ -82,6 +90,104 @@ class GeminiJudge:
             "scores": data.get("scores", {}) if isinstance(data, dict) else {},
             "rationale": str(data.get("rationale", ""))[:500],
         }
+
+    def grade_against_expected(
+        self,
+        input_text: str,
+        actual_output: str,
+        expected_output: str,
+    ) -> Dict[str, Any]:
+        """Reference-grade an actual output against a human-approved expected output.
+
+        Compares the agent's ACTUAL output against the EXPECTED output for the
+        given user input, returning a dict:
+            {"match": bool, "score": 0.0-1.0, "missing": [...], "rationale": str}
+        where `score` is the semantic correctness/coverage of actual vs expected
+        (1.0 = fully matches expected intent & key facts; partial credit allowed)
+        and `missing` lists key expected points the actual output omitted.
+
+        Falls back to a non-matching verdict on unparseable output, and to a
+        ``judge_unavailable`` verdict if the client raises.
+        """
+        prompt = self._build_reference_prompt(input_text, actual_output, expected_output)
+
+        try:
+            text = self._client.generate(
+                prompt,
+                system_instruction=_REFERENCE_JUDGE_SYSTEM,
+                max_output_tokens=1024,
+            )
+        except Exception:
+            return {
+                "match": False,
+                "score": 0.0,
+                "missing": [],
+                "rationale": "judge_unavailable",
+            }
+
+        data = _extract_json(text)
+        if not data:
+            return {
+                "match": False,
+                "score": 0.0,
+                "missing": [],
+                "rationale": "unparseable",
+            }
+
+        match = data.get("match", False)
+        if isinstance(match, str):
+            match = match.strip().lower() in ("true", "yes", "pass", "passed", "1")
+        else:
+            match = bool(match)
+
+        try:
+            score = float(data.get("score", 0.0))
+        except (TypeError, ValueError):
+            score = 0.0
+        score = max(0.0, min(1.0, score))
+
+        missing_raw = data.get("missing", [])
+        missing = (
+            [str(m) for m in missing_raw] if isinstance(missing_raw, list) else []
+        )
+
+        return {
+            "match": match,
+            "score": score,
+            "missing": missing,
+            "rationale": str(data.get("rationale", ""))[:500],
+        }
+
+    def _build_reference_prompt(
+        self, input_text: str, actual_output: str, expected_output: str
+    ) -> str:
+        lines = [
+            "# Reference grading",
+            "Grade the agent's ACTUAL output against the human-approved EXPECTED "
+            "output for the user input below.",
+            "",
+            "## User input",
+            _cap(input_text),
+            "",
+            "## EXPECTED output (human-approved reference)",
+            _cap(expected_output),
+            "",
+            "## ACTUAL output (agent produced)",
+            _cap(actual_output),
+            "",
+            "## Grading rules",
+            "- score (0.0-1.0): semantic correctness and coverage of ACTUAL vs "
+            "EXPECTED. 1.0 = fully matches expected intent & key facts; partial "
+            "credit allowed for partial coverage.",
+            "- match: true only if the actual output substantially matches the "
+            "expected intent and key facts.",
+            "- missing: list the key expected points the actual output omitted.",
+            "",
+            "## Respond with ONLY this JSON:",
+            '{"match": true|false, "score": 0.0-1.0, '
+            '"missing": ["..."], "rationale": "<one sentence>"}',
+        ]
+        return "\n".join(lines)
 
     def _build_prompt(self, harness, checks, artifact_summary) -> str:
         keys = [

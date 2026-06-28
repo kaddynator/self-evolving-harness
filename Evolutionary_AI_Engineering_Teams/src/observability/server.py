@@ -13,6 +13,11 @@ from fastapi.responses import HTMLResponse, StreamingResponse
 from pydantic import BaseModel
 
 from src.observability.bus import EventBus
+from src.eval_dataset.models import (
+    EvalCase,
+    NEEDS_LABEL,
+    SRC_PRODUCTION,
+)
 
 _STATIC = Path(__file__).parent / "static"
 
@@ -206,6 +211,24 @@ class FeedbackRequest(BaseModel):
     generations: int = 2
 
 
+# NOTE: these MUST stay module-level. The file has `from __future__ import
+# annotations`, so request models nested inside create_app() lose their
+# resolvable type context and FastAPI body binding breaks (same bug we hit
+# with FeedbackRequest).
+class CaptureRequest(BaseModel):
+    agent_id: str
+    input: str
+    context_snapshot: Dict[str, Any] = {}
+    actual_output: Optional[str] = None
+    feedback: str = ""
+    sentiment: str = ""
+
+
+class LabelRequest(BaseModel):
+    expected_output: str
+    labeled_by: str = "admin"
+
+
 # ---------------------------------------------------------------------------
 # FastAPI app factory
 # ---------------------------------------------------------------------------
@@ -214,6 +237,7 @@ def create_app(
     bus: EventBus,
     tracker: Optional[PipelineStateTracker] = None,
     run_callback: Optional[Callable[[RunRequest], None]] = None,
+    store: Optional[Any] = None,
 ) -> FastAPI:
     app = FastAPI(title="Harness Evolution Monitor", docs_url=None, redoc_url=None)
 
@@ -380,6 +404,48 @@ def create_app(
         threading.Thread(target=_go, daemon=True).start()
         return {"status": "started"}
 
+    # ── Eval-case dataset ─────────────────────────────────────
+    @app.get("/api/eval-cases")
+    async def list_eval_cases(status: Optional[str] = None, agent_id: Optional[str] = None):
+        if store is None:
+            return {"status": "error", "message": "no store"}
+        cases = store.list_eval_cases(status=status, agent_id=agent_id)
+        return {"cases": cases, "counts": store.count_eval_cases(agent_id)}
+
+    @app.post("/api/eval-cases/capture")
+    async def capture_eval_case(req: CaptureRequest):
+        if store is None:
+            return {"status": "error", "message": "no store"}
+        sentiment = req.sentiment
+        negative = (
+            sentiment.lower().startswith("neg")
+            or (bool(req.feedback) and sentiment == "")
+            or sentiment.lower() in {"bad", "unhappy"}
+        )
+        if not negative:
+            return {"status": "ignored", "reason": "non-negative sentiment"}
+        case = EvalCase(
+            agent_id=req.agent_id,
+            input=req.input,
+            context_snapshot=req.context_snapshot,
+            actual_output=req.actual_output,
+            feedback=req.feedback,
+            sentiment=sentiment or "negative",
+            source=SRC_PRODUCTION,
+            status=NEEDS_LABEL,
+        )
+        case_id = store.save_eval_case(case)
+        return {"status": "captured", "id": case_id, "needs_label": True}
+
+    @app.post("/api/eval-cases/{case_id}/label")
+    async def label_eval_case(case_id: str, req: LabelRequest):
+        if store is None:
+            return {"status": "error", "message": "no store"}
+        updated = store.label_eval_case(case_id, req.expected_output, labeled_by=req.labeled_by)
+        if updated is None:
+            return {"status": "error", "message": "case not found"}
+        return {"status": "labeled", "case": updated}
+
     return app
 
 
@@ -393,7 +459,11 @@ def start_server(
     port: int = 8765,
     tracker: Optional[PipelineStateTracker] = None,
     run_callback: Optional[Callable] = None,
+    store: Optional[Any] = None,
 ) -> None:
+    # NOTE: `store` defaults to None so existing callers keep working. To wire
+    # the eval-case endpoints, cmd_serve in cli.py should call this as
+    # `start_server(..., store=store)` (cli.py is owned by another agent).
     import uvicorn
-    app = create_app(bus, tracker=tracker, run_callback=run_callback)
+    app = create_app(bus, tracker=tracker, run_callback=run_callback, store=store)
     uvicorn.run(app, host=host, port=port, log_level="error")

@@ -109,6 +109,27 @@ def _run_binary_check(
     )
 
 
+def score_against_expected(
+    judge: Any,
+    input_text: str,
+    actual_output: str,
+    expected_output: Optional[str],
+) -> Dict[str, Any]:
+    """Reference-grade an actual output against a human-approved expected output.
+
+    Delegates to ``judge.grade_against_expected`` and returns its dict
+    ``{"match", "score", "missing", "rationale"}``. Pure / side-effect free.
+
+    Guard: if `judge` is None or `expected_output` is falsy (no reference to grade
+    against), returns ``{"match": None, "score": None, "missing": [],
+    "rationale": "no reference"}`` without calling the judge.
+    """
+    if judge is None or not expected_output:
+        return {"match": None, "score": None, "missing": [], "rationale": "no reference"}
+
+    return judge.grade_against_expected(input_text, actual_output, expected_output)
+
+
 def score_run(
     run: RunResult,
     evaluation: Evaluation,
