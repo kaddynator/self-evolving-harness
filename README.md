@@ -4,6 +4,19 @@
 
 ---
 
+## Demo
+
+https://github.com/kaddynator/self-evolving-harness/raw/main/Evolutionary_AI_Engineering_Teams/dist/harness-demo.mp4
+
+| Design Studio | Evolution Tab |
+|---|---|
+| ![Design Studio](artifacts/Screenshot%202026-06-28%20at%2012.09.41%20PM.png) | ![Evolution](artifacts/image.png) |
+
+> **Design Studio** — enter a plain-English task, choose domain and agent count, hit Start Evolution.
+> **Evolution tab** — live workflow graph, failure signatures, mutations proposed and gated each generation.
+
+---
+
 ## The Problem
 
 Today's AI agents are powerful — but most multi-agent systems remain fundamentally static. Developers predefine the agents, assign their responsibilities, and manually design how they collaborate. This works for predictable workflows, but breaks down when tasks are unfamiliar, evolve over time, or require expertise that was not anticipated during system design.
