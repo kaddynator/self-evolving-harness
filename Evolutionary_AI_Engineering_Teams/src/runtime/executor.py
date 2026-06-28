@@ -61,6 +61,11 @@ class RuntimeExecutor:
         run_id = str(uuid.uuid4())
         start = time.monotonic()
 
+        # Let stateful runners (e.g. the Gemini tool runner) reset per-run state
+        # such as shared memory and the tool sandbox. Plain-function runners
+        # (the mock) have no new_run attribute, so this is a no-op for them.
+        getattr(self._agent_runner, "new_run", lambda: None)()
+
         result = RunResult(
             run_id=run_id,
             harness_id=harness.organization.id,

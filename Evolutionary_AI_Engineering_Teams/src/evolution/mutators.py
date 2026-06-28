@@ -10,11 +10,19 @@ from src.ir.schema import (
 
 
 def _clone(harness: OrganizationHarness) -> OrganizationHarness:
-    """Deep-copy the harness and bump its version number."""
+    """Deep-copy the harness and bump its version number.
+
+    The organization.id stays short and constant across generations (e.g.
+    ``wf-ratelimiter``); generations are tracked by the integer
+    ``organization.version`` field instead of appending ``_vN`` suffixes to the
+    id. parent_id records the lineage (the parent's id), which equals our own id
+    since the slug is stable — this keeps the displayed id stable and readable.
+    """
     raw = harness.model_dump(mode="python")
     raw["organization"]["version"] = harness.organization.version + 1
     raw["organization"]["parent_id"] = harness.organization.id
-    raw["organization"]["id"] = f"{harness.organization.id}_v{raw['organization']['version']}"
+    # Keep the id constant — do NOT append _v<N>. Version increments separately.
+    raw["organization"]["id"] = harness.organization.id
     return OrganizationHarness.model_validate(raw)
 
 

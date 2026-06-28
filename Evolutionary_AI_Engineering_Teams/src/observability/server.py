@@ -195,6 +195,10 @@ class RunRequest(BaseModel):
     project_id: str = "ai-hack-sf26sfo-7208"
     model_id: str = "gemini-2.5-flash"
     num_agents: Optional[int] = None
+    # Per-agent prompt detail level: "brief" | "detailed" | "exhaustive".
+    prompt_detail: str = "detailed"
+    # When True, the evolution engine explores the Gemini model pool per agent.
+    optimize_models: bool = True
 
 
 # ---------------------------------------------------------------------------

@@ -445,18 +445,10 @@ input[type=range]::-webkit-slider-thumb{
 /* ════════════════════════════════════════════════════════════
    AGENT TOPOLOGY GRAPH — full-width, big canvas
    ════════════════════════════════════════════════════════════ */
-#agent-graph-wrap{
-  flex-shrink:0;
-  background:rgba(0,0,0,.22);
-  border-bottom:1px solid rgba(255,255,255,.07);
-  padding:0;
-  position:relative;
-  min-height:220px;
-}
-#agent-graph-wrap .ag-title{
-  position:absolute;top:10px;left:16px;
+#mon-topology .ag-title{
+  position:absolute;top:8px;left:16px;z-index:2;
   font-size:9px;letter-spacing:1.2px;text-transform:uppercase;
-  color:rgba(255,255,255,.25);font-family:var(--font);
+  color:rgba(255,255,255,.3);font-family:var(--font);
 }
 #agent-graph{width:100%;display:block;}
 /* SVG node styles (applied via JS className on <g> elements) */
@@ -650,6 +642,108 @@ input[type=range]::-webkit-slider-thumb{
 /* Glass cards & panels: subtle hover lift */
 .chart-card,.tools-section,.metrics-table-wrap{transition:transform .2s ease,box-shadow .2s ease}
 .chart-card:hover{transform:translateY(-2px);box-shadow:0 10px 28px -14px rgba(6,182,212,.4)}
+
+/* ════════════════════════════════════════════════════════════
+   MONITOR — 3-zone layout: topology (top-left), logs (bottom-left),
+   metrics (full-height right). id+class beats .tab-pane.active.
+   ════════════════════════════════════════════════════════════ */
+#monitor.active{
+  display:grid;
+  grid-template-columns:1fr minmax(280px,340px);
+  grid-template-rows:minmax(220px,44%) 1fr auto;
+  gap:0;height:100%;overflow:hidden;
+}
+#mon-topology{
+  grid-column:1;grid-row:1;position:relative;overflow:hidden;
+  background:rgba(0,0,0,.22);border-right:1px solid var(--glass-border);
+  border-bottom:1px solid var(--glass-border);display:flex;flex-direction:column;
+}
+#agent-graph-scroll{flex:1;overflow:auto;padding:24px 8px 8px}
+#agent-graph-scroll::-webkit-scrollbar{width:4px;height:4px}
+#agent-graph-scroll::-webkit-scrollbar-thumb{background:rgba(255,255,255,.1);border-radius:2px}
+#mon-logs{grid-column:1;grid-row:2;border-right:1px solid var(--glass-border);min-height:0;overflow:hidden}
+#mon-metrics{grid-column:2;grid-row:1 / span 2;min-height:0;overflow:hidden}
+#monitor #feedback-bar{grid-column:1 / -1;grid-row:3}
+@media(max-width:820px){
+  #monitor.active{grid-template-columns:1fr;grid-template-rows:auto auto auto auto}
+  #mon-metrics{grid-column:1;grid-row:auto}
+}
+
+/* ════════════════════════════════════════════════════════════
+   UIVERSE-STYLE INPUTS (floating label + animated underline)
+   ════════════════════════════════════════════════════════════ */
+.uiv-field{position:relative;margin-top:4px}
+.uiv-input{
+  width:100%;background:rgba(255,255,255,.03);
+  border:1px solid rgba(255,255,255,.1);border-radius:10px;
+  color:var(--bright);font-family:var(--font-sans);font-size:13px;
+  padding:16px 12px 8px;resize:vertical;transition:border-color .2s,background .2s;
+}
+.uiv-input:focus{outline:none;background:rgba(6,182,212,.04);border-color:rgba(6,182,212,.45)}
+.uiv-label{
+  position:absolute;left:13px;top:13px;pointer-events:none;
+  color:var(--dim);font-size:13px;font-family:var(--font-sans);
+  transition:all .18s ease;
+}
+.uiv-input:focus ~ .uiv-label,
+.uiv-input:not(:placeholder-shown) ~ .uiv-label{
+  top:4px;left:10px;font-size:9px;letter-spacing:.5px;text-transform:uppercase;
+  color:var(--cyan);
+}
+.uiv-bar{position:absolute;left:50%;bottom:0;height:2px;width:0;border-radius:2px;
+  background:linear-gradient(90deg,#06b6d4,#a855f7);transition:all .25s ease;transform:translateX(-50%)}
+.uiv-input:focus ~ .uiv-bar{width:100%}
+
+/* Number stepper */
+.num-stepper{display:flex;align-items:center;gap:0;background:rgba(255,255,255,.03);
+  border:1px solid rgba(255,255,255,.1);border-radius:10px;overflow:hidden;width:fit-content}
+.num-btn{background:rgba(255,255,255,.04);border:none;color:var(--cyan);
+  width:34px;height:34px;font-size:16px;cursor:pointer;font-family:var(--font);
+  transition:background .15s}
+.num-btn:hover{background:rgba(6,182,212,.18)}
+.num-input{width:54px;height:34px;text-align:center;background:transparent;border:none;
+  color:var(--bright);font-family:var(--font);font-size:14px;-moz-appearance:textfield}
+.num-input::-webkit-inner-spin-button,.num-input::-webkit-outer-spin-button{-webkit-appearance:none;margin:0}
+.num-input:focus{outline:none}
+
+/* Toggle switch (uiverse style) */
+.uiv-switch{display:flex;align-items:center;gap:9px;cursor:pointer;user-select:none}
+.uiv-switch input{display:none}
+.uiv-slider{position:relative;width:42px;height:22px;border-radius:22px;
+  background:rgba(255,255,255,.12);transition:background .25s;flex-shrink:0}
+.uiv-slider::before{content:'';position:absolute;top:3px;left:3px;width:16px;height:16px;
+  border-radius:50%;background:#cbd5e1;transition:transform .25s,background .25s}
+.uiv-switch input:checked + .uiv-slider{background:linear-gradient(90deg,#06b6d4,#a855f7)}
+.uiv-switch input:checked + .uiv-slider::before{transform:translateX(20px);background:#fff}
+.uiv-switch-label{font-size:11px;color:var(--text);font-family:var(--font-sans)}
+.example-lead{font-size:9px;color:var(--dim);align-self:center;letter-spacing:.5px;text-transform:uppercase;margin-right:2px}
+
+/* ════════════════════════════════════════════════════════════
+   EVOLUTION — collapsible iteration cards + full per-gen graph
+   ════════════════════════════════════════════════════════════ */
+.gen-card-header{cursor:pointer;user-select:none;transition:background .15s}
+.gen-card-header:hover{background:rgba(255,255,255,.045)}
+.gc-chevron{color:var(--cyan);font-size:11px;transition:transform .2s;flex-shrink:0;width:12px}
+.gen-card:not(.collapsed) .gc-chevron{transform:rotate(90deg)}
+.gen-card-collapse{max-height:6000px;overflow:hidden;transition:max-height .3s ease,opacity .2s ease;opacity:1}
+.gen-card.collapsed .gen-card-collapse{max-height:0;opacity:0}
+.gen-card.collapsed .gen-card-header{border-bottom:none}
+/* two-column body now (sigs | mutations) */
+.gen-card-body{grid-template-columns:1fr 1fr !important}
+.gen-graph-wrap{padding:8px 14px 14px;overflow-x:auto;background:rgba(0,0,0,.15)}
+.gen-graph-wrap::-webkit-scrollbar{height:5px}
+.gen-graph-wrap::-webkit-scrollbar-thumb{background:rgba(255,255,255,.12);border-radius:3px}
+.gen-graph{display:block;min-width:100%}
+.gen-agents-detail{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:10px;padding:8px 14px 16px}
+.gen-agent-card{background:rgba(255,255,255,.03);border:1px solid var(--card-border);border-radius:10px;padding:10px}
+.gen-agent-top{display:flex;align-items:center;gap:8px;margin-bottom:6px;flex-wrap:wrap}
+.gen-agent-name{font-size:11px;font-weight:700;color:var(--bright);font-family:var(--font-sans)}
+.gen-agent-plines{font-size:9px;color:var(--dim);margin-left:auto}
+.gen-agent-prompt{margin-top:7px;background:rgba(0,0,0,.25);border:1px solid rgba(255,255,255,.05);border-radius:6px;
+  padding:8px 10px;font-family:var(--font);font-size:10px;line-height:1.5;color:var(--text);
+  white-space:pre-wrap;max-height:180px;overflow-y:auto}
+.gen-agent-prompt::-webkit-scrollbar{width:4px}
+.gen-agent-prompt::-webkit-scrollbar-thumb{background:rgba(255,255,255,.12);border-radius:2px}
 </style>
 </head>
 <body>
@@ -672,7 +766,7 @@ input[type=range]::-webkit-slider-thumb{
 
 <!-- tab bar -->
 <nav id="tab-bar">
-  <button class="tab-btn active" data-tab="configure"><span class="tab-dot"></span>Configure</button>
+  <button class="tab-btn active" data-tab="configure"><span class="tab-dot"></span>Design Studio</button>
   <button class="tab-btn" data-tab="monitor"><span class="tab-dot"></span>Monitor</button>
   <button class="tab-btn" data-tab="evolution"><span class="tab-dot"></span>Evolution</button>
   <button class="tab-btn" data-tab="metrics"><span class="tab-dot"></span>Metrics</button>
@@ -686,22 +780,19 @@ input[type=range]::-webkit-slider-thumb{
   <!-- ── Configure ──────────────────────────────────────────── -->
   <div id="configure" class="tab-pane active scroll">
     <div class="configure-wrap">
-      <h2>Configure Evolution Run</h2>
-      <p class="subtitle">Describe a task in plain language — the system compiles a multi-agent workflow and optimizes it over N generations.</p>
+      <h2>Design Your AI Team</h2>
+      <p class="subtitle">Describe a task in plain language — the system compiles a multi-agent workflow and evolves it over N generations.</p>
 
       <div class="field">
         <label>Task Description</label>
-        <textarea id="f-task" class="glass-textarea" placeholder="e.g. Implement a per-user rate limiter for the REST API that tracks requests in Redis…" rows="4"></textarea>
+        <div class="uiv-field">
+          <textarea id="f-task" class="uiv-input" placeholder=" " rows="4"></textarea>
+          <span class="uiv-label">What should your AI team build?</span>
+          <span class="uiv-bar"></span>
+        </div>
         <div class="example-prompts" id="example-prompts">
-          <span style="font-size:9px;color:var(--dim);align-self:center;letter-spacing:.5px;text-transform:uppercase;margin-right:2px">Examples:</span>
-          <button class="prompt-chip" data-prompt="Implement a per-user rate limiter using Redis that returns HTTP 429 after 5 req/min">Rate Limiter</button>
-          <button class="prompt-chip" data-prompt="Build an LRU cache with O(1) get and put operations">LRU Cache</button>
-          <button class="prompt-chip" data-prompt="Add a feature flag system that supports percentage-based rollouts">Feature Flags</button>
-          <button class="prompt-chip" data-prompt="Implement a webhook handler with retry logic and signature verification">Webhook Handler</button>
-          <button class="prompt-chip" data-prompt="Add JWT authentication middleware with refresh token support">JWT Auth</button>
-          <button class="prompt-chip" data-prompt="Design a CSV-to-database ETL pipeline with validation and error reporting">CSV ETL Pipeline</button>
-          <button class="prompt-chip" data-prompt="Build a real-time Kafka consumer pipeline with dead-letter queue support">Kafka Pipeline</button>
-          <button class="prompt-chip" data-prompt="Implement a collaborative filtering recommender engine">Recommender Engine</button>
+          <span class="example-lead">Examples:</span>
+          <!-- chips injected by renderExamples() based on selected domain -->
         </div>
       </div>
 
@@ -717,16 +808,18 @@ input[type=range]::-webkit-slider-thumb{
         </div>
         <div class="field">
           <label>Number of Agents</label>
-          <div class="slider-wrap">
-            <input type="range" id="f-agents" min="2" max="30" value="4">
-            <span class="slider-val" id="f-agents-val">4</span>
+          <div class="num-stepper">
+            <button type="button" class="num-btn" data-step="-1" data-target="f-agents">−</button>
+            <input type="number" id="f-agents" class="num-input" min="2" max="40" value="4">
+            <button type="button" class="num-btn" data-step="1" data-target="f-agents">+</button>
           </div>
         </div>
         <div class="field">
           <label>Max Generations</label>
-          <div class="slider-wrap">
-            <input type="range" id="f-gens" min="1" max="10" value="3">
-            <span class="slider-val" id="f-gens-val">3</span>
+          <div class="num-stepper">
+            <button type="button" class="num-btn" data-step="-1" data-target="f-gens">−</button>
+            <input type="number" id="f-gens" class="num-input" min="1" max="15" value="3">
+            <button type="button" class="num-btn" data-step="1" data-target="f-gens">+</button>
           </div>
         </div>
       </div>
@@ -734,15 +827,37 @@ input[type=range]::-webkit-slider-thumb{
       <!-- Live domain explainer — updates when the domain select changes -->
       <div id="domain-info" class="domain-info-card"></div>
 
+      <div class="field-row">
+        <div class="field">
+          <label>Prompt Detail</label>
+          <select id="f-prompt-detail" class="glass-select">
+            <option value="brief">Brief — short, punchy prompts</option>
+            <option value="detailed" selected>Detailed — methodology + format</option>
+            <option value="exhaustive">Exhaustive — deep, specialized prompts</option>
+          </select>
+        </div>
+        <div class="field">
+          <label>Base Gemini Model</label>
+          <select id="f-model" class="glass-select">
+            <option value="gemini-2.5-flash-lite">gemini-2.5-flash-lite</option>
+            <option value="gemini-2.5-flash" selected>gemini-2.5-flash</option>
+            <option value="gemini-2.5-pro">gemini-2.5-pro</option>
+          </select>
+        </div>
+        <div class="field">
+          <label>Model Optimization</label>
+          <label class="uiv-switch">
+            <input type="checkbox" id="f-optimize-models" checked>
+            <span class="uiv-slider"></span>
+            <span class="uiv-switch-label">Auto-pick per agent</span>
+          </label>
+        </div>
+      </div>
+
       <div class="field">
         <label>Constraints <span style="opacity:.5;text-transform:none;letter-spacing:0">(optional)</span></label>
         <div id="constraint-list"></div>
         <button class="add-constraint-btn" id="add-constraint-btn">+ Add constraint</button>
-      </div>
-
-      <div class="field">
-        <label>Gemini Model</label>
-        <input type="text" id="f-model" class="glass-input" value="gemini-2.5-flash" placeholder="gemini-2.5-flash">
       </div>
 
       <button id="start-btn" class="start-btn">▶ Start Evolution</button>
@@ -758,13 +873,52 @@ input[type=range]::-webkit-slider-thumb{
   </div>
 
   <!-- ── Monitor ─────────────────────────────────────────────── -->
+  <!-- 3-zone layout: topology top-left, logs bottom-left, metrics right -->
   <div id="monitor" class="tab-pane">
-    <!-- Big agent topology graph — full width -->
-    <div id="agent-graph-wrap">
+    <!-- Top-left: agent topology -->
+    <div id="mon-topology">
       <span class="ag-title">Agent Topology</span>
-      <svg id="agent-graph" height="240"><text x="50%" y="50%" text-anchor="middle" dominant-baseline="middle" fill="rgba(148,163,184,.3)" font-size="12" font-family="system-ui">Waiting for pipeline…</text></svg>
+      <div id="agent-graph-scroll">
+        <svg id="agent-graph" height="240"><text x="50%" y="50%" text-anchor="middle" dominant-baseline="middle" fill="rgba(148,163,184,.3)" font-size="12" font-family="system-ui">Waiting for pipeline…</text></svg>
+      </div>
     </div>
-    <!-- Feedback bar — shown after evolution completes -->
+
+    <!-- Bottom-left: evolution logs -->
+    <div id="mon-logs" class="panel">
+      <div class="panel-title">Evolution Logs</div>
+      <div class="panel-body" id="event-log"></div>
+    </div>
+
+    <!-- Right: metrics (full height) -->
+    <div id="mon-metrics" class="panel">
+      <div class="panel-title">Metrics</div>
+      <div class="panel-body">
+        <div class="metric-block">
+          <div class="metric-label">Score</div>
+          <div id="score-value">—</div>
+          <div id="score-threshold"></div>
+          <div class="score-bar-wrap"><div class="score-bar-fill" id="score-bar" style="width:0%"></div></div>
+        </div>
+        <div class="metric-block">
+          <div class="metric-label">Metric Breakdown</div>
+          <div id="metric-rows"><p class="empty">—</p></div>
+        </div>
+        <div class="metric-block">
+          <div class="metric-label">Failure Signatures</div>
+          <div id="signatures"><p class="empty">None yet</p></div>
+        </div>
+        <div class="metric-block">
+          <div class="metric-label">Mutations</div>
+          <div id="mutations"><p class="empty">None yet</p></div>
+        </div>
+        <div class="metric-block">
+          <div class="metric-label">Generation History</div>
+          <div id="gen-history"><p class="empty">—</p></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Feedback bar — spans the bottom when a run completes -->
     <div id="feedback-bar" class="feedback-bar hidden">
       <div class="feedback-bar-inner">
         <span class="feedback-bar-label">Evolution complete — refine the workflow:</span>
@@ -777,40 +931,6 @@ input[type=range]::-webkit-slider-thumb{
             <option value="5">5 more generations</option>
           </select>
           <button id="feedback-btn" class="start-btn" style="padding:8px 20px;font-size:12px;margin-top:0;width:auto">↻ Continue Evolving</button>
-        </div>
-      </div>
-    </div>
-    <!-- Bottom 2-panel row -->
-    <div style="display:grid;grid-template-columns:1fr 1fr;flex:1;overflow:hidden;min-height:0">
-      <div class="panel">
-        <div class="panel-title">Live Events</div>
-        <div class="panel-body" id="event-log"></div>
-      </div>
-      <div class="panel">
-        <div class="panel-title">Metrics</div>
-        <div class="panel-body">
-          <div class="metric-block">
-            <div class="metric-label">Score</div>
-            <div id="score-value">—</div>
-            <div id="score-threshold"></div>
-            <div class="score-bar-wrap"><div class="score-bar-fill" id="score-bar" style="width:0%"></div></div>
-          </div>
-          <div class="metric-block">
-            <div class="metric-label">Metric Breakdown</div>
-            <div id="metric-rows"><p class="empty">—</p></div>
-          </div>
-          <div class="metric-block">
-            <div class="metric-label">Failure Signatures</div>
-            <div id="signatures"><p class="empty">None yet</p></div>
-          </div>
-          <div class="metric-block">
-            <div class="metric-label">Mutations</div>
-            <div id="mutations"><p class="empty">None yet</p></div>
-          </div>
-          <div class="metric-block">
-            <div class="metric-label">Generation History</div>
-            <div id="gen-history"><p class="empty">—</p></div>
-          </div>
         </div>
       </div>
     </div>
@@ -867,6 +987,389 @@ input[type=range]::-webkit-slider-thumb{
   <!-- ── Docs ────────────────────────────────────────────────── -->
   <div id="docs" class="tab-pane scroll">
     <div class="docs-content">
+      <hr class="docs-hr"/>
+<h2>Architecture &amp; Evolution</h2>
+<!--
+  architecture_evolution.html
+  Self-contained snippet for the dashboard "Docs" tab.
+  No <html>/<head>/<body> wrapper, no external assets, no JS — inline-styled
+  div + inline SVG only. Palette: cyan #06b6d4, purple #a855f7, green #22c55e,
+  amber #f59e0b, rose #ec4899, text #cbd5e1, dim #94a3b8.
+-->
+<div class="arch-docs" style="color:#cbd5e1;font-family:system-ui,-apple-system,'Segoe UI',sans-serif;line-height:1.6;max-width:1080px;margin:0 auto;">
+
+  <style>
+    .arch-docs h2{font-size:22px;font-weight:700;color:#f1f5f9;margin:32px 0 8px;letter-spacing:-.01em;}
+    .arch-docs h3{font-size:16px;font-weight:600;color:#e2e8f0;margin:24px 0 6px;}
+    .arch-docs p{color:#cbd5e1;margin:8px 0;}
+    .arch-docs .lead{font-size:15px;color:#94a3b8;}
+    .arch-docs .card{background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);border-radius:12px;padding:18px 20px;margin:16px 0;}
+    .arch-docs .grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:12px;margin:14px 0;}
+    .arch-docs .chip{display:inline-block;font-size:12px;font-weight:600;padding:2px 9px;border-radius:999px;margin:2px 4px 2px 0;border:1px solid rgba(255,255,255,.12);}
+    .arch-docs code{background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.08);border-radius:6px;padding:1px 6px;font-size:13px;color:#e2e8f0;font-family:ui-monospace,SFMono-Regular,Menlo,monospace;}
+    .arch-docs svg{display:block;max-width:100%;height:auto;}
+    .arch-docs .mut{border-left:3px solid;padding:8px 14px;margin:8px 0;background:rgba(255,255,255,.03);border-radius:0 10px 10px 0;}
+    .arch-docs .muted{color:#94a3b8;font-size:13px;}
+    .arch-docs ul{color:#cbd5e1;margin:8px 0 8px 4px;padding-left:18px;}
+    .arch-docs li{margin:4px 0;}
+  </style>
+
+  <!-- ============================================================= -->
+  <!-- 1. OVERVIEW                                                   -->
+  <!-- ============================================================= -->
+  <h2>What this system is</h2>
+  <p class="lead">
+    A <strong style="color:#06b6d4;">compiler and optimizer for AI agent organizations</strong>.
+    You describe a task in plain language; the system synthesizes a multi-agent workflow,
+    runs it, measures it, finds why it underperformed, and rewrites the workflow itself —
+    generation after generation. The artifact it returns is not just the task result,
+    it is the <em>optimized organization</em>: which agents exist, what their prompts say,
+    which tools and models they get, how they hand off, and how big their budgets are.
+  </p>
+
+  <div class="grid">
+    <div class="card">
+      <div style="font-weight:700;color:#06b6d4;">Compile</div>
+      <p class="muted">Gemini turns a natural-language task into a validated <strong>Harness IR</strong> — agents, prompts, tools, phases, communication edges, evaluation contract.</p>
+    </div>
+    <div class="card">
+      <div style="font-weight:700;color:#a855f7;">Run &amp; Evaluate</div>
+      <p class="muted">Agents execute in sandboxed phases, calling tools via Gemini function-calling. A weighted-sum scorer plus an LLM judge grade the run.</p>
+    </div>
+    <div class="card">
+      <div style="font-weight:700;color:#22c55e;">Mine &amp; Mutate</div>
+      <p class="muted">A miner extracts <strong>failure signatures</strong>; the engine maps each failure mechanism to a concrete workflow mutation.</p>
+    </div>
+    <div class="card">
+      <div style="font-weight:700;color:#f59e0b;">Gate &amp; Chain</div>
+      <p class="muted">A validation gate accepts a candidate only on <strong>no regression + a real improvement</strong>. The winner becomes the parent of the next generation.</p>
+    </div>
+  </div>
+
+  <!-- ============================================================= -->
+  <!-- 2. END-TO-END ARCHITECTURE                                    -->
+  <!-- ============================================================= -->
+  <h2>End-to-end architecture</h2>
+  <p>
+    A single closed loop. The natural-language task enters once at the left; everything to the
+    right of the compiler repeats every generation, with the accepted candidate feeding back
+    into the next cycle.
+  </p>
+
+  <div class="card" style="padding:8px;">
+  <svg viewBox="0 0 980 460" font-family="system-ui" role="img" aria-label="End-to-end architecture diagram">
+    <defs>
+      <marker id="ah" markerWidth="9" markerHeight="9" refX="7" refY="3" orient="auto" markerUnits="strokeWidth">
+        <path d="M0,0 L7,3 L0,6 Z" fill="#64748b"/>
+      </marker>
+      <marker id="ahg" markerWidth="9" markerHeight="9" refX="7" refY="3" orient="auto" markerUnits="strokeWidth">
+        <path d="M0,0 L7,3 L0,6 Z" fill="#22c55e"/>
+      </marker>
+    </defs>
+
+    <!-- NL task input -->
+    <rect x="20" y="40" width="150" height="62" rx="12" fill="rgba(255,255,255,.04)" stroke="rgba(255,255,255,.08)"/>
+    <text x="95" y="66" text-anchor="middle" fill="#f1f5f9" font-size="13" font-weight="700">NL Task</text>
+    <text x="95" y="84" text-anchor="middle" fill="#94a3b8" font-size="11">+ constraints, domain,</text>
+    <text x="95" y="98" text-anchor="middle" fill="#94a3b8" font-size="11">prior lessons</text>
+
+    <!-- Gemini Compiler -->
+    <rect x="210" y="32" width="160" height="78" rx="12" fill="rgba(168,85,247,.10)" stroke="#a855f7"/>
+    <text x="290" y="60" text-anchor="middle" fill="#c4b5fd" font-size="13" font-weight="700">Gemini Compiler</text>
+    <text x="290" y="80" text-anchor="middle" fill="#94a3b8" font-size="11">synth + schema retry</text>
+    <text x="290" y="95" text-anchor="middle" fill="#94a3b8" font-size="11">normalize · stamp model</text>
+
+    <!-- Harness IR -->
+    <rect x="410" y="32" width="150" height="78" rx="12" fill="rgba(6,182,212,.10)" stroke="#06b6d4"/>
+    <text x="485" y="60" text-anchor="middle" fill="#67e8f9" font-size="13" font-weight="700">Harness IR</text>
+    <text x="485" y="80" text-anchor="middle" fill="#94a3b8" font-size="11">agents · tools · phases</text>
+    <text x="485" y="95" text-anchor="middle" fill="#94a3b8" font-size="11">edges · eval contract</text>
+
+    <!-- Runtime Executor -->
+    <rect x="600" y="32" width="170" height="78" rx="12" fill="rgba(6,182,212,.10)" stroke="#06b6d4"/>
+    <text x="685" y="58" text-anchor="middle" fill="#67e8f9" font-size="13" font-weight="700">Runtime Executor</text>
+    <text x="685" y="78" text-anchor="middle" fill="#94a3b8" font-size="11">phased agents +</text>
+    <text x="685" y="93" text-anchor="middle" fill="#94a3b8" font-size="11">sandboxed tools</text>
+
+    <!-- Scorer + Judge -->
+    <rect x="600" y="180" width="170" height="78" rx="12" fill="rgba(34,197,94,.10)" stroke="#22c55e"/>
+    <text x="685" y="206" text-anchor="middle" fill="#86efac" font-size="13" font-weight="700">Scorer + LLM Judge</text>
+    <text x="685" y="226" text-anchor="middle" fill="#94a3b8" font-size="11">weighted-sum metrics</text>
+    <text x="685" y="241" text-anchor="middle" fill="#94a3b8" font-size="11">+ binary verdicts</text>
+
+    <!-- Weakness Miner -->
+    <rect x="410" y="180" width="150" height="78" rx="12" fill="rgba(236,72,153,.10)" stroke="#ec4899"/>
+    <text x="485" y="206" text-anchor="middle" fill="#f9a8d4" font-size="13" font-weight="700">Weakness Miner</text>
+    <text x="485" y="226" text-anchor="middle" fill="#94a3b8" font-size="11">failure signatures</text>
+    <text x="485" y="241" text-anchor="middle" fill="#94a3b8" font-size="11">→ mechanisms</text>
+
+    <!-- Mutation Engine -->
+    <rect x="210" y="180" width="160" height="78" rx="12" fill="rgba(168,85,247,.10)" stroke="#a855f7"/>
+    <text x="290" y="206" text-anchor="middle" fill="#c4b5fd" font-size="13" font-weight="700">Mutation Engine</text>
+    <text x="290" y="226" text-anchor="middle" fill="#94a3b8" font-size="11">mechanism → mutation</text>
+    <text x="290" y="241" text-anchor="middle" fill="#94a3b8" font-size="11">candidate harnesses</text>
+
+    <!-- Validation Gate -->
+    <rect x="20" y="180" width="150" height="78" rx="12" fill="rgba(245,158,11,.10)" stroke="#f59e0b"/>
+    <text x="95" y="206" text-anchor="middle" fill="#fcd34d" font-size="13" font-weight="700">Validation Gate</text>
+    <text x="95" y="226" text-anchor="middle" fill="#94a3b8" font-size="11">no regression +</text>
+    <text x="95" y="241" text-anchor="middle" fill="#94a3b8" font-size="11">improvement</text>
+
+    <!-- Accepted candidate / loop store -->
+    <rect x="20" y="330" width="750" height="58" rx="12" fill="rgba(255,255,255,.03)" stroke="rgba(255,255,255,.10)" stroke-dasharray="4 4"/>
+    <text x="395" y="356" text-anchor="middle" fill="#cbd5e1" font-size="12" font-weight="600">Accepted candidate persisted to MongoDB (organization · run · evaluation · lessons) and becomes parent of next generation</text>
+    <text x="395" y="374" text-anchor="middle" fill="#94a3b8" font-size="11">every step also streams to the observability event bus → live dashboard</text>
+
+    <!-- arrows top row -->
+    <line x1="170" y1="71" x2="206" y2="71" stroke="#64748b" stroke-width="2" marker-end="url(#ah)"/>
+    <line x1="370" y1="71" x2="406" y2="71" stroke="#64748b" stroke-width="2" marker-end="url(#ah)"/>
+    <line x1="560" y1="71" x2="596" y2="71" stroke="#64748b" stroke-width="2" marker-end="url(#ah)"/>
+    <!-- executor down to scorer -->
+    <line x1="685" y1="110" x2="685" y2="176" stroke="#64748b" stroke-width="2" marker-end="url(#ah)"/>
+    <!-- bottom row right→left -->
+    <line x1="600" y1="219" x2="564" y2="219" stroke="#64748b" stroke-width="2" marker-end="url(#ah)"/>
+    <line x1="410" y1="219" x2="374" y2="219" stroke="#64748b" stroke-width="2" marker-end="url(#ah)"/>
+    <line x1="210" y1="219" x2="174" y2="219" stroke="#64748b" stroke-width="2" marker-end="url(#ah)"/>
+    <!-- gate runs candidates back through executor (dashed up) -->
+    <path d="M120,180 C120,140 540,150 600,90" fill="none" stroke="#f59e0b" stroke-width="1.6" stroke-dasharray="5 4" marker-end="url(#ah)"/>
+    <text x="300" y="142" text-anchor="middle" fill="#fcd34d" font-size="10">candidates re-run for real before gating</text>
+    <!-- accepted loop back to IR (green) -->
+    <line x1="95" y1="258" x2="95" y2="326" stroke="#22c55e" stroke-width="2" marker-end="url(#ahg)"/>
+    <path d="M770,359 C870,359 900,200 560,71" fill="none" stroke="#22c55e" stroke-width="2" stroke-dasharray="6 4" marker-end="url(#ahg)"/>
+    <text x="905" y="230" text-anchor="middle" fill="#86efac" font-size="10" transform="rotate(90 905 230)">loop · next generation</text>
+  </svg>
+  </div>
+
+  <!-- ============================================================= -->
+  <!-- 3. ANATOMY OF ONE GENERATION                                  -->
+  <!-- ============================================================= -->
+  <h2>Anatomy of one generation</h2>
+  <p>
+    <code>EvolutionPipeline.run_cycle()</code> executes nine stages in order. The first run of
+    a generation is the <em>parent</em>; each proposed mutation produces a <em>candidate</em>
+    that is run for real and compared against the parent before the gate decides.
+  </p>
+
+  <div class="card" style="padding:8px;">
+  <svg viewBox="0 0 980 600" font-family="system-ui" role="img" aria-label="Nine-stage generation flow">
+    <defs>
+      <marker id="vdn" markerWidth="9" markerHeight="9" refX="4" refY="7" orient="auto" markerUnits="strokeWidth">
+        <path d="M0,0 L8,0 L4,7 Z" fill="#475569"/>
+      </marker>
+    </defs>
+
+    <!-- helper: 9 stages, each a row -->
+    <!-- Stage 1 -->
+    <circle cx="46" cy="46" r="18" fill="rgba(168,85,247,.15)" stroke="#a855f7"/><text x="46" y="51" text-anchor="middle" fill="#c4b5fd" font-size="14" font-weight="700">1</text>
+    <rect x="80" y="24" width="860" height="44" rx="10" fill="rgba(255,255,255,.04)" stroke="rgba(255,255,255,.08)"/>
+    <text x="98" y="42" fill="#f1f5f9" font-size="13" font-weight="700">Compile / load harness</text>
+    <text x="98" y="59" fill="#94a3b8" font-size="11">Persist the parent organization to the store; this is the workflow to be measured and improved.</text>
+
+    <!-- Stage 2 -->
+    <circle cx="46" cy="108" r="18" fill="rgba(6,182,212,.15)" stroke="#06b6d4"/><text x="46" y="113" text-anchor="middle" fill="#67e8f9" font-size="14" font-weight="700">2</text>
+    <rect x="80" y="86" width="860" height="44" rx="10" fill="rgba(255,255,255,.04)" stroke="rgba(255,255,255,.08)"/>
+    <text x="98" y="104" fill="#f1f5f9" font-size="13" font-weight="700">Run</text>
+    <text x="98" y="121" fill="#94a3b8" font-size="11">RuntimeExecutor steps each phase; agents call sandboxed tools (mock or real Gemini function-calling). Save the RunResult.</text>
+
+    <!-- Stage 3 -->
+    <circle cx="46" cy="170" r="18" fill="rgba(34,197,94,.15)" stroke="#22c55e"/><text x="46" y="175" text-anchor="middle" fill="#86efac" font-size="14" font-weight="700">3</text>
+    <rect x="80" y="148" width="860" height="44" rx="10" fill="rgba(255,255,255,.04)" stroke="rgba(255,255,255,.08)"/>
+    <text x="98" y="166" fill="#f1f5f9" font-size="13" font-weight="700">Evaluate</text>
+    <text x="98" y="183" fill="#94a3b8" font-size="11">score_run() computes weighted-sum metrics + binary checks; an optional Gemini judge overrides booleans it can truly verify.</text>
+
+    <!-- Stage 4 -->
+    <circle cx="46" cy="232" r="18" fill="rgba(236,72,153,.15)" stroke="#ec4899"/><text x="46" y="237" text-anchor="middle" fill="#f9a8d4" font-size="14" font-weight="700">4</text>
+    <rect x="80" y="210" width="860" height="44" rx="10" fill="rgba(255,255,255,.04)" stroke="rgba(255,255,255,.08)"/>
+    <text x="98" y="228" fill="#f1f5f9" font-size="13" font-weight="700">Mine weaknesses</text>
+    <text x="98" y="245" fill="#94a3b8" font-size="11">Rule classifiers emit FailureSignatures (verifier_cause · agent_behavior · mechanism); deduplicated and stored as lessons.</text>
+
+    <!-- Stage 5 -->
+    <circle cx="46" cy="294" r="18" fill="rgba(168,85,247,.15)" stroke="#a855f7"/><text x="46" y="299" text-anchor="middle" fill="#c4b5fd" font-size="14" font-weight="700">5</text>
+    <rect x="80" y="272" width="860" height="44" rx="10" fill="rgba(255,255,255,.04)" stroke="rgba(255,255,255,.08)"/>
+    <text x="98" y="290" fill="#f1f5f9" font-size="13" font-weight="700">Propose mutations</text>
+    <text x="98" y="307" fill="#94a3b8" font-size="11">Each mechanism maps to mutation rules (filtered by mutation_policy), producing up to proposal_width (proposal, candidate) pairs.</text>
+
+    <!-- Stage 6 -->
+    <circle cx="46" cy="356" r="18" fill="rgba(6,182,212,.15)" stroke="#06b6d4"/><text x="46" y="361" text-anchor="middle" fill="#67e8f9" font-size="14" font-weight="700">6</text>
+    <rect x="80" y="334" width="860" height="44" rx="10" fill="rgba(255,255,255,.04)" stroke="rgba(255,255,255,.08)"/>
+    <text x="98" y="352" fill="#f1f5f9" font-size="13" font-weight="700">Run candidates</text>
+    <text x="98" y="369" fill="#94a3b8" font-size="11">Every candidate harness is executed for real and scored — no candidate is judged on prediction alone.</text>
+
+    <!-- Stage 7 -->
+    <circle cx="46" cy="418" r="18" fill="rgba(245,158,11,.15)" stroke="#f59e0b"/><text x="46" y="423" text-anchor="middle" fill="#fcd34d" font-size="14" font-weight="700">7</text>
+    <rect x="80" y="396" width="860" height="44" rx="10" fill="rgba(255,255,255,.04)" stroke="rgba(255,255,255,.08)"/>
+    <text x="98" y="414" fill="#f1f5f9" font-size="13" font-weight="700">Gate</text>
+    <text x="98" y="431" fill="#94a3b8" font-size="11">apply_validation_gate(): reject on any regression or no improvement or runtime overrun; otherwise accept the first qualifying candidate.</text>
+
+    <!-- Stage 8 -->
+    <circle cx="46" cy="480" r="18" fill="rgba(34,197,94,.15)" stroke="#22c55e"/><text x="46" y="485" text-anchor="middle" fill="#86efac" font-size="14" font-weight="700">8</text>
+    <rect x="80" y="458" width="860" height="44" rx="10" fill="rgba(255,255,255,.04)" stroke="rgba(255,255,255,.08)"/>
+    <text x="98" y="476" fill="#f1f5f9" font-size="13" font-weight="700">Persist</text>
+    <text x="98" y="493" fill="#94a3b8" font-size="11">Save the accepted candidate's organization, run, and evaluation; record every gate decision as a mutation record.</text>
+
+    <!-- Stage 9 -->
+    <circle cx="46" cy="542" r="18" fill="rgba(168,85,247,.15)" stroke="#a855f7"/><text x="46" y="547" text-anchor="middle" fill="#c4b5fd" font-size="14" font-weight="700">9</text>
+    <rect x="80" y="520" width="860" height="44" rx="10" fill="rgba(255,255,255,.04)" stroke="rgba(255,255,255,.08)"/>
+    <text x="98" y="538" fill="#f1f5f9" font-size="13" font-weight="700">Chain</text>
+    <text x="98" y="555" fill="#94a3b8" font-size="11">The accepted candidate becomes the parent for generation N+1; if none accepted, the same harness is carried forward.</text>
+
+    <!-- connectors -->
+    <line x1="46" y1="64" x2="46" y2="90" stroke="#475569" stroke-width="2" marker-end="url(#vdn)"/>
+    <line x1="46" y1="126" x2="46" y2="152" stroke="#475569" stroke-width="2" marker-end="url(#vdn)"/>
+    <line x1="46" y1="188" x2="46" y2="214" stroke="#475569" stroke-width="2" marker-end="url(#vdn)"/>
+    <line x1="46" y1="250" x2="46" y2="276" stroke="#475569" stroke-width="2" marker-end="url(#vdn)"/>
+    <line x1="46" y1="312" x2="46" y2="338" stroke="#475569" stroke-width="2" marker-end="url(#vdn)"/>
+    <line x1="46" y1="374" x2="46" y2="400" stroke="#475569" stroke-width="2" marker-end="url(#vdn)"/>
+    <line x1="46" y1="436" x2="46" y2="462" stroke="#475569" stroke-width="2" marker-end="url(#vdn)"/>
+    <line x1="46" y1="498" x2="46" y2="524" stroke="#475569" stroke-width="2" marker-end="url(#vdn)"/>
+  </svg>
+  </div>
+
+  <!-- ============================================================= -->
+  <!-- 4. HOW A WORKFLOW EVOLVES                                     -->
+  <!-- ============================================================= -->
+  <h2>How a workflow evolves across generations</h2>
+  <p>
+    Each accepted mutation changes one surface of the organization — a prompt, a budget, a
+    tool list, a model, or the agent roster — and the score climbs as redundancy is pruned and
+    weak agents are strengthened. The example below traces a bloated 7-agent workflow being
+    optimized toward a tight, high-scoring core.
+  </p>
+
+  <div class="card" style="padding:8px;">
+  <svg viewBox="0 0 980 420" font-family="system-ui" role="img" aria-label="Workflow evolution across generations">
+    <defs>
+      <marker id="evah" markerWidth="9" markerHeight="9" refX="7" refY="3" orient="auto" markerUnits="strokeWidth">
+        <path d="M0,0 L7,3 L0,6 Z" fill="#22c55e"/>
+      </marker>
+    </defs>
+
+    <!-- score curve baseline -->
+    <line x1="60" y1="360" x2="920" y2="360" stroke="rgba(255,255,255,.10)"/>
+    <text x="40" y="364" text-anchor="end" fill="#94a3b8" font-size="11">score</text>
+
+    <!-- Generation columns -->
+    <!-- Gen 1 -->
+    <text x="160" y="36" text-anchor="middle" fill="#cbd5e1" font-size="13" font-weight="700">Gen 1 · baseline</text>
+    <rect x="90" y="52" width="140" height="200" rx="12" fill="rgba(255,255,255,.04)" stroke="rgba(255,255,255,.08)"/>
+    <rect x="104" y="66" width="112" height="20" rx="6" fill="rgba(6,182,212,.12)" stroke="#06b6d4"/><text x="160" y="80" text-anchor="middle" fill="#67e8f9" font-size="10">requirements</text>
+    <rect x="104" y="92" width="112" height="20" rx="6" fill="rgba(6,182,212,.12)" stroke="#06b6d4"/><text x="160" y="106" text-anchor="middle" fill="#67e8f9" font-size="10">coder</text>
+    <rect x="104" y="118" width="112" height="20" rx="6" fill="rgba(6,182,212,.12)" stroke="#06b6d4"/><text x="160" y="132" text-anchor="middle" fill="#67e8f9" font-size="10">tester</text>
+    <rect x="104" y="144" width="112" height="20" rx="6" fill="rgba(6,182,212,.12)" stroke="#06b6d4"/><text x="160" y="158" text-anchor="middle" fill="#67e8f9" font-size="10">reviewer</text>
+    <rect x="104" y="170" width="112" height="20" rx="6" fill="rgba(236,72,153,.12)" stroke="#ec4899" stroke-dasharray="3 3"/><text x="160" y="184" text-anchor="middle" fill="#f9a8d4" font-size="10">stakeholder ?</text>
+    <rect x="104" y="196" width="112" height="20" rx="6" fill="rgba(236,72,153,.12)" stroke="#ec4899" stroke-dasharray="3 3"/><text x="160" y="210" text-anchor="middle" fill="#f9a8d4" font-size="10">docs ?</text>
+    <rect x="104" y="222" width="112" height="20" rx="6" fill="rgba(236,72,153,.12)" stroke="#ec4899" stroke-dasharray="3 3"/><text x="160" y="236" text-anchor="middle" fill="#f9a8d4" font-size="10">compliance ?</text>
+    <circle cx="160" cy="330" r="7" fill="#22c55e"/>
+    <text x="160" y="392" text-anchor="middle" fill="#94a3b8" font-size="11">7 agents · high tool_calls</text>
+
+    <!-- Gen 2 -->
+    <text x="490" y="36" text-anchor="middle" fill="#cbd5e1" font-size="13" font-weight="700">Gen 2 · prune + strengthen</text>
+    <rect x="420" y="52" width="140" height="200" rx="12" fill="rgba(255,255,255,.04)" stroke="rgba(255,255,255,.08)"/>
+    <rect x="434" y="66" width="112" height="20" rx="6" fill="rgba(168,85,247,.18)" stroke="#a855f7"/><text x="490" y="80" text-anchor="middle" fill="#c4b5fd" font-size="10">requirements ✎ prompt</text>
+    <rect x="434" y="92" width="112" height="20" rx="6" fill="rgba(245,158,11,.16)" stroke="#f59e0b"/><text x="490" y="106" text-anchor="middle" fill="#fcd34d" font-size="10">coder ⤓ budget</text>
+    <rect x="434" y="118" width="112" height="20" rx="6" fill="rgba(6,182,212,.12)" stroke="#06b6d4"/><text x="490" y="132" text-anchor="middle" fill="#67e8f9" font-size="10">tester</text>
+    <rect x="434" y="144" width="112" height="20" rx="6" fill="rgba(6,182,212,.12)" stroke="#06b6d4"/><text x="490" y="158" text-anchor="middle" fill="#67e8f9" font-size="10">reviewer</text>
+    <rect x="434" y="170" width="112" height="20" rx="6" fill="rgba(248,113,113,.10)" stroke="#f87171" stroke-dasharray="3 3"/><text x="490" y="184" text-anchor="middle" fill="#fca5a5" font-size="10">stakeholder ✕</text>
+    <rect x="434" y="196" width="112" height="20" rx="6" fill="rgba(248,113,113,.10)" stroke="#f87171" stroke-dasharray="3 3"/><text x="490" y="210" text-anchor="middle" fill="#fca5a5" font-size="10">docs ✕</text>
+    <circle cx="490" cy="270" r="7" fill="#22c55e"/>
+    <text x="490" y="392" text-anchor="middle" fill="#94a3b8" font-size="11">5 agents · redundant pruned</text>
+
+    <!-- Gen 3 -->
+    <text x="820" y="36" text-anchor="middle" fill="#cbd5e1" font-size="13" font-weight="700">Gen 3 · tuned core</text>
+    <rect x="750" y="52" width="140" height="200" rx="12" fill="rgba(255,255,255,.04)" stroke="rgba(34,197,94,.35)"/>
+    <rect x="764" y="66" width="112" height="20" rx="6" fill="rgba(34,197,94,.14)" stroke="#22c55e"/><text x="820" y="80" text-anchor="middle" fill="#86efac" font-size="10">requirements ⇪ model</text>
+    <rect x="764" y="92" width="112" height="20" rx="6" fill="rgba(34,197,94,.14)" stroke="#22c55e"/><text x="820" y="106" text-anchor="middle" fill="#86efac" font-size="10">coder ⌗ tools</text>
+    <rect x="764" y="118" width="112" height="20" rx="6" fill="rgba(34,197,94,.14)" stroke="#22c55e"/><text x="820" y="132" text-anchor="middle" fill="#86efac" font-size="10">tester</text>
+    <rect x="764" y="144" width="112" height="20" rx="6" fill="rgba(34,197,94,.14)" stroke="#22c55e"/><text x="820" y="158" text-anchor="middle" fill="#86efac" font-size="10">reviewer</text>
+    <circle cx="820" cy="210" r="7" fill="#22c55e"/>
+    <text x="820" y="392" text-anchor="middle" fill="#94a3b8" font-size="11">4 agents · best score</text>
+
+    <!-- climbing score line -->
+    <polyline points="160,330 490,270 820,210" fill="none" stroke="#22c55e" stroke-width="2.5" marker-end="url(#evah)"/>
+
+    <!-- legend -->
+    <g font-size="11">
+      <rect x="90" y="402" width="12" height="12" rx="3" fill="rgba(168,85,247,.18)" stroke="#a855f7"/><text x="108" y="412" fill="#94a3b8">prompt/model change</text>
+      <rect x="280" y="402" width="12" height="12" rx="3" fill="rgba(245,158,11,.16)" stroke="#f59e0b"/><text x="298" y="412" fill="#94a3b8">budget/tools change</text>
+      <rect x="470" y="402" width="12" height="12" rx="3" fill="rgba(248,113,113,.10)" stroke="#f87171"/><text x="488" y="412" fill="#94a3b8">removed agent</text>
+    </g>
+  </svg>
+  </div>
+
+  <!-- ============================================================= -->
+  <!-- 5. MUTATION TYPES + VALIDATION GATE                           -->
+  <!-- ============================================================= -->
+  <h2>Mutation types</h2>
+  <p>
+    Every failure mechanism the miner detects is mapped to one or more concrete edits. Only
+    mutations listed in the harness's <code>mutation_policy.allowed_mutations</code> are
+    generated, and protected components (success conditions, the validation gate itself) are
+    never touched.
+  </p>
+
+  <div class="mut" style="border-color:#a855f7;">
+    <strong style="color:#c4b5fd;">modify_prompt</strong>
+    <span class="muted"> — grow/specialize an agent's prompt (e.g. tie every acceptance criterion to a test assertion, or enforce a minimal-diff methodology). Uses Gemini to genuinely expand the prompt when a client is available, else a deterministic append.</span>
+  </div>
+  <div class="mut" style="border-color:#f59e0b;">
+    <strong style="color:#fcd34d;">adjust_budget</strong>
+    <span class="muted"> — tighten an agent's <code>max_tool_calls</code> to curb runaway exploration and drive <code>tool_calls</code> down.</span>
+  </div>
+  <div class="mut" style="border-color:#06b6d4;">
+    <strong style="color:#67e8f9;">modify_tools</strong>
+    <span class="muted"> — grant a tool that was denied at runtime (resolves <code>wrong_tool_permission</code> failures).</span>
+  </div>
+  <div class="mut" style="border-color:#22c55e;">
+    <strong style="color:#86efac;">change_model</strong>
+    <span class="muted"> — upgrade an agent to a stronger model (e.g. requirements agent → <code>gemini-2.5-flash</code>) for more precise output.</span>
+  </div>
+  <div class="mut" style="border-color:#ec4899;">
+    <strong style="color:#f9a8d4;">remove_agent</strong>
+    <span class="muted"> — prune a non-core agent flagged as redundant, lowering overhead and improving the efficiency score. Core agents (requirements/coder/tester/reviewer) and sole-in-phase agents are protected.</span>
+  </div>
+  <div class="mut" style="border-color:#a855f7;">
+    <strong style="color:#c4b5fd;">add_agent</strong>
+    <span class="muted"> — insert a dedicated verifier when a run concluded without test evidence (<code>unverified_completion</code>).</span>
+  </div>
+  <div class="mut" style="border-color:#f59e0b;">
+    <strong style="color:#fcd34d;">modify_runtime_policy</strong>
+    <span class="muted"> — enforce artifact-before-finish, prevent identical retries, or cap repeated tool errors.</span>
+  </div>
+  <div class="mut" style="border-color:#06b6d4;">
+    <strong style="color:#67e8f9;">reorder_edges</strong>
+    <span class="muted"> — make a hand-off blocking so the tester is guaranteed to run after the coder (fixes <code>late_testing</code>).</span>
+  </div>
+
+  <h3>The validation gate</h3>
+  <p>
+    A candidate is only allowed to replace its parent when it earns it. The gate applies three
+    rules to the candidate's <em>real</em> evaluation versus the parent's:
+  </p>
+  <div class="card">
+    <ul>
+      <li><span class="chip" style="color:#fca5a5;border-color:#f87171;">runtime</span> The candidate must finish within <code>max_runtime_seconds</code>, else rejected outright.</li>
+      <li><span class="chip" style="color:#fcd34d;border-color:#f59e0b;">no regression</span> No metric in <code>require_no_regression</code> (e.g. <code>tests_pass</code>) may drop below the parent.</li>
+      <li><span class="chip" style="color:#86efac;border-color:#22c55e;">improvement</span> At least one metric in <code>require_improvement_any</code> (e.g. <code>total_score</code> or lower <code>tool_calls</code>) must strictly improve.</li>
+    </ul>
+    <p class="muted" style="margin-top:6px;">
+      On the very first run there is no parent to compare against, so the gate accepts simply on
+      passing the success threshold. This <strong>accept-only-on-net-improvement</strong> rule is
+      what makes evolution monotonic: scores never go backward, and the optimizer keeps the best
+      organization it has found.
+    </p>
+  </div>
+
+  <p class="muted" style="margin-top:24px;border-top:1px solid rgba(255,255,255,.08);padding-top:12px;">
+    Throughout the loop, every stage publishes events to the observability bus
+    (<code>evolution_start</code>, <code>generation_start</code>, <code>evaluation_complete</code>,
+    <code>weakness_mined</code>, <code>mutation_proposed</code>, <code>gate_decision</code>,
+    <code>harness_snapshot</code>, <code>evolution_complete</code>) so this dashboard can render the
+    workflow topology, scores, and decisions live as they happen.
+  </p>
+
+</div>
+
+<hr class="docs-hr"/>
       <h2>What is this?</h2>
       <p>The <strong>Harness Evolution Monitor</strong> is an <em>agent builder and optimizer</em>. You give it a plain-language task description; it synthesizes a multi-agent workflow (an <em>Organization Harness</em>), runs it, evaluates it, mines failure patterns, and proposes mutations — repeating for N generations until no further improvement is accepted.</p>
       <p>The <strong>output is the optimized workflow definition</strong> (the harness YAML), not just the task result. Think of it as a compiler + optimizer for AI organizations.</p>
@@ -1062,32 +1565,76 @@ document.querySelectorAll('.tab-btn').forEach(b=>{
 // ════════════════════════════════════════════════════════════
 // CONFIGURE TAB
 // ════════════════════════════════════════════════════════════
-// Sliders
-const fGens=$('f-gens'), fGensVal=$('f-gens-val');
-fGens.addEventListener('input',()=>{fGensVal.textContent=fGens.value;updateModelInfoBar();});
-const fAgents=$('f-agents'), fAgentsVal=$('f-agents-val');
-fAgents.addEventListener('input',()=>{fAgentsVal.textContent=fAgents.value;updateModelInfoBar();});
+// Numeric inputs (agents, generations)
+const fGens=$('f-gens'), fAgents=$('f-agents');
+fGens.addEventListener('input',updateModelInfoBar);
+fAgents.addEventListener('input',updateModelInfoBar);
+
+// Number steppers (+/- buttons)
+function _clampNum(inp){
+  let v=parseInt(inp.value)||parseInt(inp.min)||0;
+  const lo=parseInt(inp.min), hi=parseInt(inp.max);
+  if(!isNaN(lo))v=Math.max(lo,v); if(!isNaN(hi))v=Math.min(hi,v);
+  inp.value=v; return v;
+}
+document.querySelectorAll('.num-btn').forEach(btn=>{
+  btn.addEventListener('click',()=>{
+    const inp=$(btn.dataset.target); if(!inp)return;
+    inp.value=(parseInt(inp.value)||0)+parseInt(btn.dataset.step);
+    _clampNum(inp); updateModelInfoBar();
+  });
+});
+fGens.addEventListener('change',()=>{_clampNum(fGens);updateModelInfoBar();});
+fAgents.addEventListener('change',()=>{_clampNum(fAgents);updateModelInfoBar();});
 
 function updateModelInfoBar(){
   $('model-info-id').textContent=$('f-model').value||'gemini-2.5-flash';
-  $('model-info-agents').textContent=`${fAgents.value} agents · ${fGens.value} generations`;
+  const opt=$('f-optimize-models')&&$('f-optimize-models').checked?' · model auto-opt':'';
+  $('model-info-agents').textContent=`${fAgents.value} agents · ${fGens.value} generations${opt}`;
 }
-$('f-model').addEventListener('input',updateModelInfoBar);
+$('f-model').addEventListener('change',updateModelInfoBar);
+const _optEl=$('f-optimize-models'); if(_optEl)_optEl.addEventListener('change',updateModelInfoBar);
 updateModelInfoBar();
 
-// Example prompt chips
-document.querySelectorAll('.prompt-chip').forEach(chip=>{
-  chip.addEventListener('click',()=>{
-    $('f-task').value=chip.dataset.prompt;
-    $('f-task').focus();
-    // auto-pick domain based on chip text
-    const t=chip.dataset.prompt.toLowerCase();
-    if(t.includes('etl')||t.includes('kafka')||t.includes('pipeline'))$('f-domain').value='data_pipeline';
-    else if(t.includes('research')||t.includes('compare')||t.includes('recommend'))$('f-domain').value='research';
-    else $('f-domain').value='software_engineering';
-    renderDomainInfo();
+// ── Domain-specific example prompts ──────────────────────────
+const DOMAIN_EXAMPLES={
+  general:[
+    ["Trip Planner","Plan a 5-day itinerary for Tokyo within a $2000 budget"],
+    ["Meeting Notes","Summarize a meeting transcript into decisions and action items"],
+    ["Onboarding","Design a 30-day onboarding checklist for a new engineer"],
+  ],
+  software_engineering:[
+    ["Rate Limiter","Implement a per-user rate limiter using Redis that returns HTTP 429 after 5 req/min"],
+    ["LRU Cache","Build an LRU cache with O(1) get and put operations and unit tests"],
+    ["JWT Auth","Add JWT authentication middleware with refresh token support"],
+    ["Webhook Handler","Implement a webhook handler with retry logic and signature verification"],
+  ],
+  research:[
+    ["LLM Survey","Survey recent approaches to retrieval-augmented generation and summarize trade-offs"],
+    ["Vector DBs","Compare Pinecone, Weaviate, and pgvector for a 10M-vector workload"],
+    ["Market Scan","Research the competitive landscape for AI code-review tools"],
+  ],
+  data_pipeline:[
+    ["CSV ETL","Design a CSV-to-Postgres ETL pipeline with validation and error reporting"],
+    ["Kafka Stream","Build a real-time Kafka consumer pipeline with a dead-letter queue"],
+    ["Log Aggregator","Ingest JSON logs, aggregate by service, and emit hourly summaries"],
+  ],
+};
+
+function renderExamples(){
+  const wrap=$('example-prompts'); if(!wrap)return;
+  const domain=$('f-domain').value;
+  const ex=DOMAIN_EXAMPLES[domain]||DOMAIN_EXAMPLES.general;
+  wrap.innerHTML='<span class="example-lead">Examples:</span>'+
+    ex.map(([label,prompt])=>`<button class="prompt-chip" data-prompt="${esc(prompt)}">${esc(label)}</button>`).join('');
+  wrap.querySelectorAll('.prompt-chip').forEach(chip=>{
+    chip.addEventListener('click',()=>{
+      $('f-task').value=chip.dataset.prompt;
+      $('f-task').dispatchEvent(new Event('input'));
+      $('f-task').focus();
+    });
   });
-});
+}
 
 // ── Domain explainer ─────────────────────────────────────────
 const DOMAIN_INFO={
@@ -1125,8 +1672,9 @@ function renderDomainInfo(){
     <div class="di-row"><span class="di-label">Artifacts</span><div class="di-chips">${arts}</div></div>
     <div class="di-row"><span class="di-label">Best for</span><span class="di-bestfor">${esc(d.bestFor)}</span></div>`;
 }
-$('f-domain').addEventListener('change',renderDomainInfo);
+$('f-domain').addEventListener('change',()=>{renderDomainInfo();renderExamples();});
 renderDomainInfo();
+renderExamples();
 
 // Constraints
 function addConstraint(val=''){
@@ -1155,6 +1703,8 @@ $('start-btn').addEventListener('click',async()=>{
     use_gemini:true,
     model_id:$('f-model').value||'gemini-2.5-flash',
     num_agents:numAgents,
+    prompt_detail:($('f-prompt-detail')&&$('f-prompt-detail').value)||'detailed',
+    optimize_models:!!($('f-optimize-models')&&$('f-optimize-models').checked),
   };
   $('start-btn').disabled=true;
   setCfgStatus('Stopping any running evolution…','');
@@ -1296,6 +1846,20 @@ function addGenHistory(gen,score){
 // ════════════════════════════════════════════════════════════
 // EVOLUTION TAB
 // ════════════════════════════════════════════════════════════
+function toggleGenCard(headerEl){
+  const card=headerEl.closest('.gen-card');
+  if(!card)return;
+  const wasCollapsed=card.classList.contains('collapsed');
+  card.classList.toggle('collapsed');
+  // Render the full graph lazily when expanding.
+  if(wasCollapsed){
+    const gen=parseInt(card.dataset.gen);
+    const g=S.allGenerations.find(x=>x.generation===gen);
+    const snap=g&&(g.harness_snapshot||g.snapshot);
+    if(snap){snap.generation=gen;renderGenGraph('gg-'+gen,snap);}
+  }
+}
+
 function renderEvolution(){
   const timeline=$('evo-timeline');
   const gens=S.allGenerations;
@@ -1307,48 +1871,44 @@ function renderEvolution(){
   timeline.innerHTML='';
   gens.forEach((gen,idx)=>{
     const prev=idx>0?gens[idx-1]:null;
-    const card=document.createElement('div');card.className='gen-card';
+    const isLast=idx===gens.length-1;
+    const card=document.createElement('div');
+    card.className='gen-card'+(isLast?'':' collapsed');  // latest expanded, rest collapsed
+    card.dataset.gen=gen.generation;
     const scoreCls=gen.passed?'passed':'failed';
     const verdict=gen.passed?'✓ PASSED':'✗ FAILED';
     const delta=prev?gen.score-prev.score:null;
     const deltaStr=delta!==null?`${delta>=0?'+':''}${delta.toFixed(1)} from G${prev.generation}`:'base';
-    // agents html
-    const agentsHtml=Object.values(gen.agents||{}).map(a=>`
-      <div class="gc-agent">
-        <div class="gc-agent-dot ${a.status||'pending'}"></div>
-        <span class="gc-agent-id">${esc(a.id)}</span>
-        <span class="gc-agent-tc">${a.tool_calls?'⚒'+a.tool_calls:''}</span>
-        <span class="gc-agent-arts">${(a.artifacts||[]).join(', ')}</span>
-      </div>`).join('');
-    // sigs html
     const sigsHtml=(gen.signatures||[]).length
       ?(gen.signatures||[]).map(s=>`<div class="gc-sig"><div class="gc-sig-mech">${esc(s.mechanism||'')}</div><div class="gc-sig-detail">${esc(s.agent_behavior||'')}</div></div>`).join('')
       :'<p class="empty" style="color:var(--green);opacity:1">✓ None</p>';
-    // muts html
     const mutsHtml=(gen.mutations||[]).length
       ?(gen.mutations||[]).map(m=>`<div class="gc-mut"><span class="gc-mut-icon ${m.accepted?'a':'r'}">${m.accepted===null?'…':m.accepted?'✓':'✗'}</span><span class="gc-mut-text">${esc(m.type)}</span></div>`).join('')
       :'<p class="empty">—</p>';
-    // Per-gen workflow detail section
     const snapshot=gen.harness_snapshot||gen.snapshot||null;
     const agentCount=snapshot?(snapshot.agents||[]).length:Object.keys(gen.agents||{}).length;
-    const workflowDetail=snapshot?`
-      <div class="workflow-detail" id="wd-${gen.generation}">
-        <div style="font-size:9px;color:var(--dim);letter-spacing:.6px;margin-bottom:8px;text-transform:uppercase">Agents in this generation</div>
-        <div class="workflow-graph-mini" id="wg-mini-${gen.generation}"></div>
-        ${(snapshot.agents||[]).map(a=>`
-          <div class="agent-detail-row">
-            <div class="agent-detail-id">${esc(a.id.replace('_agent','').replace(/_/g,' '))}</div>
-            <div class="agent-detail-model">${esc(a.model||'mock')}</div>
-            <div>
-              <div class="agent-detail-prompt">${esc((a.prompt||'').slice(0,120))}</div>
-              <div class="agent-tools-chips">${(a.tools||[]).map(t=>`<span class="agent-tool-chip-sm">${esc(t)}</span>`).join('')}</div>
-            </div>
-          </div>`).join('')}
-      </div>
-      <button class="workflow-toggle" onclick="toggleWorkflow(${gen.generation})">▶ Show Workflow (${agentCount} agents)</button>
-    `:'';
+
+    // Per-agent detail: model badge, tools, FULL prompt (scrollable) so the
+    // prompt evolution across generations is visible.
+    const agentsDetail=snapshot?(snapshot.agents||[]).map(a=>{
+      const pl=(a.prompt||'').split('\n').length;
+      return `
+      <div class="gen-agent-card">
+        <div class="gen-agent-top">
+          <span class="gen-agent-name">${esc(a.id.replace(/_agent$/,'').replace(/_/g,' '))}</span>
+          <span class="model-badge">${esc(a.model||'gemini-2.5-flash')}</span>
+          <span class="gen-agent-plines">${pl} line prompt</span>
+        </div>
+        <div class="agent-tools-chips">${(a.tools||[]).map(t=>`<span class="agent-tool-chip-sm">${esc(t)}</span>`).join('')}</div>
+        <pre class="gen-agent-prompt">${esc(a.prompt||'')}</pre>
+      </div>`;
+    }).join(''):'<p class="empty">No workflow snapshot.</p>';
+
+    const graphSvg=snapshot?`<div class="gen-graph-wrap"><svg id="gg-${gen.generation}" class="gen-graph"></svg></div>`:'';
+
     card.innerHTML=`
-      <div class="gen-card-header">
+      <div class="gen-card-header" onclick="toggleGenCard(this)">
+        <span class="gc-chevron">▶</span>
         <div class="gc-badge">G${gen.generation}</div>
         <div class="gc-score ${scoreCls}">${gen.score.toFixed(1)}</div>
         <div class="gc-verdict ${scoreCls}">${verdict}</div>
@@ -1357,24 +1917,28 @@ function renderEvolution(){
           <div>⚒ ${gen.tool_calls} tool calls  •  ${deltaStr}  •  ${agentCount} agents</div>
         </div>
       </div>
-      <div class="gen-card-body">
-        <div class="gc-section">
-          <div class="gc-section-title">Failure Signatures</div>
-          ${sigsHtml}
+      <div class="gen-card-collapse">
+        <div class="gc-section-title" style="padding:12px 14px 0">Workflow graph</div>
+        ${graphSvg}
+        <div class="gen-card-body">
+          <div class="gc-section">
+            <div class="gc-section-title">Failure Signatures</div>
+            ${sigsHtml}
+          </div>
+          <div class="gc-section">
+            <div class="gc-section-title">Mutations</div>
+            ${mutsHtml}
+          </div>
         </div>
-        <div class="gc-section">
-          <div class="gc-section-title">Mutations</div>
-          ${mutsHtml}
-        </div>
-        <div class="gc-section">
-          <div class="gc-section-title">Agents</div>
-          ${agentsHtml}
-        </div>
-      </div>
-      ${workflowDetail}`;
+        <div class="gc-section-title" style="padding:0 14px">Agents &amp; prompts</div>
+        <div class="gen-agents-detail">${agentsDetail}</div>
+      </div>`;
     timeline.appendChild(card);
-    // Render mini graph if detail already open (re-render case)
-    if(snapshot){const wd=$('wd-'+gen.generation);if(wd&&wd.classList.contains('open'))renderMiniGraph('wg-mini-'+gen.generation,snapshot);}
+    // Render the full graph for any card that starts expanded.
+    if(snapshot && !card.classList.contains('collapsed')){
+      snapshot.generation=gen.generation;
+      renderGenGraph('gg-'+gen.generation, snapshot);
+    }
   });
 }
 
@@ -1491,6 +2055,84 @@ const _STATUS={
   error:  {fill:'rgba(60,15,15,.85)',  stroke:'rgba(239,68,68,.55)',  text:'rgba(254,202,202,.9)'},
 };
 
+// Shared topology SVG builder. agents: [{id,role,status,toolCalls,model}],
+// phases: [{name,agents:[ids]}], edges: [{from,to}]. Returns {inner,W,H}.
+function buildTopologySVG(agents, phases, edges, opts){
+  opts=opts||{};
+  const idsuffix=opts.idSuffix||'';
+  const phaseGroups={}, phaseOrder=[];
+  if(phases&&phases.length){
+    phases.forEach(p=>{phaseGroups[p.name]=p.agents||[];phaseOrder.push(p.name);});
+  } else {
+    phaseGroups['workflow']=agents.map(a=>a.id);phaseOrder.push('workflow');
+  }
+  // Any agents not placed in a phase → append to last column so the FULL graph shows.
+  const placed=new Set(phaseOrder.flatMap(p=>phaseGroups[p]));
+  const orphans=agents.map(a=>a.id).filter(id=>!placed.has(id));
+  if(orphans.length){
+    const extra='other'; phaseGroups[extra]=orphans; phaseOrder.push(extra);
+  }
+
+  const NW=140,NH=54,NR=8,COL_PAD=22,ROW_PAD=14,PHASE_TOP=44;
+  const maxInPhase=Math.max(...phaseOrder.map(p=>(phaseGroups[p]||[]).length),1);
+  const colW=NW+COL_PAD*2;
+  const W=Math.max(420,phaseOrder.length*colW+COL_PAD);
+  const H=PHASE_TOP+maxInPhase*(NH+ROW_PAD)+ROW_PAD+10;
+  const byId={}; agents.forEach(a=>byId[a.id]=a);
+
+  const nodePos={};
+  phaseOrder.forEach((phase,pi)=>{
+    const members=phaseGroups[phase]||[];
+    const totalH=members.length*(NH+ROW_PAD)-ROW_PAD;
+    const startY=PHASE_TOP+(H-PHASE_TOP-totalH)/2;
+    members.forEach((agentId,ai)=>{
+      nodePos[agentId]={x:pi*colW+COL_PAD,y:startY+ai*(NH+ROW_PAD),cy:startY+ai*(NH+ROW_PAD)+NH/2};
+    });
+  });
+
+  const phaseBg=phaseOrder.map((phase,pi)=>{
+    const c=_PHASE_COLORS[pi%_PHASE_COLORS.length];
+    const members=phaseGroups[phase]||[]; if(!members.length)return '';
+    const totalH=members.length*(NH+ROW_PAD)-ROW_PAD;
+    const startY=PHASE_TOP+(H-PHASE_TOP-totalH)/2;
+    return `<rect x="${pi*colW+COL_PAD/2}" y="${startY-ROW_PAD}" width="${NW+COL_PAD}" height="${totalH+ROW_PAD*2}" rx="14" fill="${c.fill}" stroke="${c.stroke}" stroke-width="1" opacity=".55"/>
+      <text x="${pi*colW+COL_PAD+NW/2}" y="${startY-ROW_PAD-7}" text-anchor="middle" fill="${c.label}" font-size="9" font-family="system-ui" font-weight="600" letter-spacing="1">${esc(phase.toUpperCase())}</text>`;
+  }).join('');
+
+  const arr='ag-arr'+idsuffix, glow='glow-c'+idsuffix;
+  const defs=`<defs><marker id="${arr}" markerWidth="7" markerHeight="7" refX="5" refY="3.5" orient="auto"><path d="M0,0.5 L0,6.5 L6,3.5 z" fill="rgba(148,163,184,.4)"/></marker>`+
+    `<filter id="${glow}"><feGaussianBlur stdDeviation="2" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter></defs>`;
+
+  const edgeSvg=(edges||[]).map(e=>{
+    const f=nodePos[e.from],t=nodePos[e.to]; if(!f||!t)return '';
+    const x1=f.x+NW,y1=f.cy,x2=t.x,y2=t.cy,mx=x1+(x2-x1)*0.5;
+    return `<path d="M${x1},${y1} C${mx},${y1} ${mx},${y2} ${x2},${y2}" stroke="rgba(148,163,184,.3)" stroke-width="1.5" fill="none" marker-end="url(#${arr})"/>`;
+  }).join('');
+
+  const nodeSvg=agents.map(a=>{
+    const pos=nodePos[a.id]; if(!pos)return '';
+    const status=a.status||'pending';
+    const sc=_STATUS[status]||_STATUS.pending;
+    const label=esc((a.id||'').replace(/_agent$/,'').replace(/_/g,' '));
+    const role=esc((a.role||'').slice(0,30)+(a.role&&a.role.length>30?'…':''));
+    const tc=a.toolCalls?`⚒ ${a.toolCalls}`:'';
+    const isRunning=status==='running';
+    const dot={pending:'#64748b',running:'#06b6d4',done:'#22c55e',error:'#ef4444'}[status]||'#64748b';
+    const ring=isRunning?`<rect x="${pos.x-4}" y="${pos.y-4}" width="${NW+8}" height="${NH+8}" rx="${NR+4}" fill="none" stroke="rgba(6,182,212,.35)" stroke-width="1.5"><animate attributeName="stroke-opacity" values=".7;0;.7" dur="1.8s" repeatCount="indefinite"/><animate attributeName="stroke-width" values="1.5;4;1.5" dur="1.8s" repeatCount="indefinite"/></rect>`:'';
+    const dg=isRunning?`<animate attributeName="r" values="3;5;3" dur="1.2s" repeatCount="indefinite"/>`:'';
+    return `<g class="ag-node ${status}"><title>${esc(a.id)}${a.model?' · '+esc(a.model):''}</title>
+      ${ring}
+      <rect x="${pos.x}" y="${pos.y}" width="${NW}" height="${NH}" rx="${NR}" fill="${sc.fill}" stroke="${sc.stroke}" stroke-width="${isRunning?2:1}"/>
+      <circle cx="${pos.x+10}" cy="${pos.y+10}" r="3" fill="${dot}" filter="${isRunning?'url(#'+glow+')':'none'}">${dg}</circle>
+      <text x="${pos.x+20}" y="${pos.y+14}" font-size="10" font-weight="700" fill="${sc.text}" font-family="system-ui">${label}</text>
+      <text x="${pos.x+8}" y="${pos.y+30}" font-size="8.5" fill="rgba(148,163,184,.6)" font-family="system-ui">${role}</text>
+      <text x="${pos.x+NW-6}" y="${pos.y+NH-7}" text-anchor="end" font-size="8" fill="rgba(100,116,139,.7)" font-family="monospace">${tc}</text>
+    </g>`;
+  }).join('');
+
+  return {inner:`${defs}${phaseBg}${edgeSvg}${nodeSvg}`, W, H};
+}
+
 function renderAgentGraph(){
   const svg=$('agent-graph');
   if(!svg)return;
@@ -1500,163 +2142,21 @@ function renderAgentGraph(){
     svg.setAttribute('height','240');
     return;
   }
-
-  // Build phase groups
-  const phases=S.phases||[];
-  const phaseGroups={};
-  const phaseOrder=[];
-  if(phases.length){
-    phases.forEach(p=>{phaseGroups[p.name]=p.agents;phaseOrder.push(p.name);});
-  } else {
-    // If no phase info, put all agents in one group
-    phaseGroups['agents']=agents.map(a=>a.id);
-    phaseOrder.push('agents');
-  }
-
-  // Layout constants — card nodes
-  const NW=130,NH=52,NR=8;          // node width, height, corner radius
-  const COL_PAD=24,ROW_PAD=14;      // padding between nodes
-  const PHASE_TOP=48,PHASE_PAD=20;  // space for phase header
-
-  const maxInPhase=Math.max(...phaseOrder.map(p=>(phaseGroups[p]||[]).length),1);
-  const colW=NW+COL_PAD*2;
-  const W=Math.max(600,phaseOrder.length*colW+COL_PAD);
-  const H=PHASE_TOP+maxInPhase*(NH+ROW_PAD)+ROW_PAD+10;
-
-  const nodePos={};
-  phaseOrder.forEach((phase,pi)=>{
-    const members=phaseGroups[phase]||[];
-    const totalH=members.length*(NH+ROW_PAD)-ROW_PAD;
-    const startY=PHASE_TOP+(H-PHASE_TOP-totalH)/2;
-    members.forEach((agentId,ai)=>{
-      nodePos[agentId]={
-        x: pi*colW+COL_PAD,
-        y: startY+ai*(NH+ROW_PAD),
-        cx: pi*colW+COL_PAD+NW/2,
-        cy: startY+ai*(NH+ROW_PAD)+NH/2,
-      };
-    });
-  });
-
-  // Phase background columns
-  const phaseBg=phaseOrder.map((phase,pi)=>{
-    const c=_PHASE_COLORS[pi%_PHASE_COLORS.length];
-    const members=phaseGroups[phase]||[];
-    if(!members.length)return '';
-    const totalH=members.length*(NH+ROW_PAD)-ROW_PAD;
-    const startY=PHASE_TOP+(H-PHASE_TOP-totalH)/2;
-    const bgH=totalH+ROW_PAD*2;
-    const bgY=startY-ROW_PAD;
-    return `<rect x="${pi*colW+COL_PAD/2}" y="${bgY}" width="${NW+COL_PAD}" height="${bgH}" rx="14" fill="${c.fill}" stroke="${c.stroke}" stroke-width="1" opacity=".55"/>
-      <text x="${pi*colW+COL_PAD+NW/2}" y="${bgY-8}" text-anchor="middle" fill="${c.label}" font-size="9" font-family="system-ui" font-weight="600" letter-spacing="1" text-transform="uppercase">${esc(phase.toUpperCase())}</text>`;
-  }).join('');
-
-  // Edges
-  const edges=S.edges||[];
-  const defs=`<defs>
-    <marker id="ag-arr" markerWidth="7" markerHeight="7" refX="5" refY="3.5" orient="auto">
-      <path d="M0,0.5 L0,6.5 L6,3.5 z" fill="rgba(148,163,184,.4)"/>
-    </marker>
-  </defs>`;
-  const edgeSvg=edges.map(e=>{
-    const f=nodePos[e.from],t=nodePos[e.to];
-    if(!f||!t)return '';
-    // Draw from right edge of source to left edge of target
-    const x1=f.x+NW, y1=f.cy, x2=t.x, y2=t.cy;
-    const cx1=x1+(x2-x1)*0.5, cy1=y1, cx2=x1+(x2-x1)*0.5, cy2=y2;
-    return `<path d="M${x1},${y1} C${cx1},${cy1} ${cx2},${cy2} ${x2},${y2}" stroke="rgba(148,163,184,.3)" stroke-width="1.5" fill="none" marker-end="url(#ag-arr)"/>`;
-  }).join('');
-
-  // Agent nodes
-  const nodeSvg=agents.map(a=>{
-    const pos=nodePos[a.id];
-    if(!pos)return '';
-    const status=a.status||'pending';
-    const sc=_STATUS[status]||_STATUS.pending;
-    const label=esc((a.id||'').replace(/_agent$/,'').replace(/_/g,' '));
-    const role=esc((a.role||'').slice(0,28)+(a.role&&a.role.length>28?'…':''));
-    const toolCount=a.toolCalls?`⚒ ${a.toolCalls}`:'';
-    const isRunning=status==='running';
-
-    // Pulse ring behind running node
-    const pulseRing=isRunning?`<rect x="${pos.x-4}" y="${pos.y-4}" width="${NW+8}" height="${NH+8}" rx="${NR+4}" fill="none" stroke="rgba(6,182,212,.35)" stroke-width="1.5">
-      <animate attributeName="stroke-opacity" values=".7;0;.7" dur="1.8s" repeatCount="indefinite"/>
-      <animate attributeName="stroke-width" values="1.5;4;1.5" dur="1.8s" repeatCount="indefinite"/>
-    </rect>`:'';
-
-    // Status dot
-    const dotColor={pending:'#64748b',running:'#06b6d4',done:'#22c55e',error:'#ef4444'}[status]||'#64748b';
-    const dotGlow=isRunning?`<animate attributeName="r" values="3;5;3" dur="1.2s" repeatCount="indefinite"/>`:'';
-
-    return `<g class="ag-node ${status}">
-      ${pulseRing}
-      <rect x="${pos.x}" y="${pos.y}" width="${NW}" height="${NH}" rx="${NR}" fill="${sc.fill}" stroke="${sc.stroke}" stroke-width="${isRunning?2:1}"/>
-      <circle cx="${pos.x+10}" cy="${pos.y+10}" r="3" fill="${dotColor}" filter="${isRunning?'url(#glow-c)':'none'}">${dotGlow}</circle>
-      <text x="${pos.x+20}" y="${pos.y+14}" font-size="10" font-weight="700" fill="${sc.text}" font-family="system-ui">${label}</text>
-      <text x="${pos.x+8}" y="${pos.y+28}" font-size="8.5" fill="rgba(148,163,184,.6)" font-family="system-ui">${role}</text>
-      <text x="${pos.x+NW-6}" y="${pos.y+NH-7}" text-anchor="end" font-size="8" fill="rgba(100,116,139,.7)" font-family="monospace">${toolCount}</text>
-    </g>`;
-  }).join('');
-
-  const glowFilter=`<filter id="glow-c"><feGaussianBlur stdDeviation="2" result="blur"/><feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge></filter>`;
-
+  const {inner,W,H}=buildTopologySVG(agents, S.phases, S.edges, {idSuffix:'-mon'});
   svg.setAttribute('height', String(H));
   svg.setAttribute('viewBox',`0 0 ${W} ${H}`);
-  svg.innerHTML=`${defs}<defs>${glowFilter}</defs>${phaseBg}${edgeSvg}${nodeSvg}`;
+  svg.innerHTML=inner;
 }
 
-function renderMiniGraph(containerId,snapshot){
-  const container=$(containerId);
-  if(!container||!snapshot)return;
-  const agents=snapshot.agents||[];
-  const phases=snapshot.phases||[];
-  const edges=snapshot.edges||[];
+// Full per-generation workflow graph (all agents) inside an evolution card.
+function renderGenGraph(svgId, snapshot){
+  const svg=$(svgId); if(!svg||!snapshot)return;
+  const agents=(snapshot.agents||[]).map(a=>({id:a.id,role:a.role,model:a.model,status:'done'}));
   if(!agents.length)return;
-  const W=container.clientWidth||300;
-  const H=85;
-  const nodeR=13;
-  const phaseGroups={};
-  phases.forEach(p=>{phaseGroups[p.name]=p.agents;});
-  const phaseNames=phases.length?phases.map(p=>p.name):['all'];
-  if(!phases.length)phaseGroups['all']=agents.map(a=>a.id);
-  const colW=W/Math.max(phaseNames.length,1);
-  const nodePos={};
-  phaseNames.forEach((phase,pi)=>{
-    (phaseGroups[phase]||[]).forEach((agentId,ai)=>{
-      nodePos[agentId]={x:pi*colW+colW/2,y:ai*36+26};
-    });
-  });
-  const edgeSvg=edges.map(e=>{
-    const f=nodePos[e.from],t=nodePos[e.to];
-    if(!f||!t)return '';
-    const dx=t.x-f.x,dy=t.y-f.y,len=Math.sqrt(dx*dx+dy*dy)||1;
-    return `<line x1="${(f.x+dx*(nodeR+2)/len).toFixed(1)}" y1="${(f.y+dy*(nodeR+2)/len).toFixed(1)}" x2="${(t.x-dx*(nodeR+4)/len).toFixed(1)}" y2="${(t.y-dy*(nodeR+4)/len).toFixed(1)}" stroke="rgba(148,163,184,.2)" stroke-width="1"/>`;
-  }).join('');
-  const colors=['rgba(6,182,212,.75)','rgba(34,197,94,.75)','rgba(245,158,11,.75)','rgba(168,85,247,.75)','rgba(239,68,68,.75)'];
-  const nodeSvg=agents.map((a,i)=>{
-    const pos=nodePos[a.id];if(!pos)return '';
-    const c=colors[i%colors.length];
-    const lbl=esc((a.id||'').replace('_agent','').slice(0,6));
-    return `<circle cx="${pos.x.toFixed(1)}" cy="${pos.y.toFixed(1)}" r="${nodeR}" fill="${c}" stroke="rgba(255,255,255,.1)" stroke-width="1"/><text x="${pos.x.toFixed(1)}" y="${(pos.y+4).toFixed(1)}" text-anchor="middle" fill="white" font-size="6.5" font-family="monospace">${lbl}</text>`;
-  }).join('');
-  const phaseLbls=phaseNames.map((p,pi)=>`<text x="${(pi*colW+colW/2).toFixed(1)}" y="10" text-anchor="middle" fill="rgba(148,163,184,.3)" font-size="7" font-family="monospace">${esc(p.slice(0,7))}</text>`).join('');
-  container.innerHTML=`<svg width="100%" height="${H}" viewBox="0 0 ${W} ${H}">${phaseLbls}${edgeSvg}${nodeSvg}</svg>`;
-}
-
-function toggleWorkflow(gen){
-  const detail=$('wd-'+gen);
-  const btn=detail?detail.nextElementSibling:null;
-  if(!detail)return;
-  const isOpen=detail.classList.toggle('open');
-  if(btn){
-    const n=detail.querySelectorAll('.agent-detail-row').length;
-    btn.textContent=(isOpen?'▼ Hide Workflow':'▶ Show Workflow')+` (${n} agents)`;
-  }
-  if(isOpen){
-    const g=S.allGenerations.find(x=>x.generation===gen);
-    const snap=(g&&(g.harness_snapshot||g.snapshot))||null;
-    if(snap)renderMiniGraph('wg-mini-'+gen,snap);
-  }
+  const {inner,W,H}=buildTopologySVG(agents, snapshot.phases, snapshot.edges, {idSuffix:'-g'+(snapshot.generation||svgId)});
+  svg.setAttribute('viewBox',`0 0 ${W} ${H}`);
+  svg.setAttribute('height', String(H));
+  svg.innerHTML=inner;
 }
 
 // ════════════════════════════════════════════════════════════
@@ -1676,7 +2176,7 @@ async function downloadWorkflowYaml(){
     (data.agents||[]).forEach(a=>{
       lines.push(`  - id: ${a.id}`);
       lines.push(`    name: "${a.name||''}"`);
-      lines.push(`    model: ${a.model||'mock'}`);
+      lines.push(`    model: ${a.model||'gemini-2.5-flash'}`);
       lines.push(`    tools: [${(a.tools||[]).join(', ')}]`);
       lines.push(`    budget_max_tool_calls: ${(a.budget&&a.budget.max_tool_calls)||5}`);
       lines.push(`    prompt: |`);

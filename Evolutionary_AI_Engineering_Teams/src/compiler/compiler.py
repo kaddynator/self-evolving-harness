@@ -12,7 +12,12 @@ from src.compiler.prompt import (
     SYSTEM_INSTRUCTION,
     build_compilation_prompt,
     build_retry_prompt,
+    tools_for_role,
 )
+
+# Default model stamped on every compiled agent so the UI/artifact reflects the
+# real model rather than falling back to "mock".
+DEFAULT_AGENT_MODEL = "gemini-2.5-flash"
 
 
 class CompilationError(Exception):
@@ -50,23 +55,41 @@ class HarnessCompiler:
         domain: str = "general",
         prior_lessons: List[Dict[str, Any]] | None = None,
         num_agents: Optional[int] = None,
+        prompt_detail: str = "detailed",
+        optimize_models: bool = True,
     ) -> OrganizationHarness:
         """Synthesize an OrganizationHarness from a task description.
 
         Falls back to mock_compile() when no Gemini client is set.
+
+        prompt_detail ("brief" | "detailed" | "exhaustive") controls how much
+        methodology each synthesized agent prompt carries. optimize_models, when
+        True, lets the evolution engine explore the Gemini model pool per agent
+        (it is recorded here so downstream consumers can honor it).
         """
         if self._client is None:
-            return self._mock_compile(task_description, constraints or [], domain, num_agents=num_agents)
+            return self._mock_compile(
+                task_description, constraints or [], domain,
+                num_agents=num_agents, prompt_detail=prompt_detail,
+                optimize_models=optimize_models,
+            )
 
         prompt = build_compilation_prompt(
             task_description,
             constraints=constraints,
             domain=domain,
             prior_lessons=prior_lessons,
+            prompt_detail=prompt_detail,
         )
 
         last_error = ""
         last_raw = ""
+
+        # Scale the output budget to the requested prompt detail: exhaustive
+        # prompts (40-80 lines × several agents) easily overflow 8192 tokens and
+        # truncate the YAML, which fails compilation. Give them ample headroom.
+        _MAX_TOKENS_BY_DETAIL = {"brief": 8192, "detailed": 12288, "exhaustive": 32768}
+        max_tokens = _MAX_TOKENS_BY_DETAIL.get(prompt_detail, 12288)
 
         for attempt in range(self._max_retries + 1):
             if attempt == 0:
@@ -78,8 +101,8 @@ class HarnessCompiler:
                 current_prompt,
                 system_instruction=SYSTEM_INSTRUCTION,
                 temperature=self._temperature,
-                max_output_tokens=8192,  # full harness YAML needs headroom
-                thinking_budget=0,       # disable thinking so output isn't truncated
+                max_output_tokens=max_tokens,  # scaled by prompt_detail
+                thinking_budget=0,             # disable thinking so output isn't truncated
             )
 
             harness, error = self._parse_and_validate(raw)
@@ -92,6 +115,9 @@ class HarnessCompiler:
                 # count if one was requested.
                 raw_dict = harness.model_dump(mode="python")
                 raw_dict = _normalize_for_mock_scoring(raw_dict)
+                # Normalize Gemini's invented org id to the short, stable scheme
+                # (wf-<slug>) so it stays readable and constant across generations.
+                raw_dict.setdefault("organization", {})["id"] = _make_short_id(task_description)
                 if num_agents is not None and num_agents > 0:
                     raw_dict = _expand_agents(raw_dict, num_agents)
                 harness = load_harness_from_dict(raw_dict)
@@ -169,11 +195,20 @@ class HarnessCompiler:
         constraints: List[str],
         domain: str,
         num_agents: Optional[int] = None,
+        prompt_detail: str = "detailed",
+        optimize_models: bool = True,
     ) -> OrganizationHarness:
-        """Generate a sensible default harness based on task keywords."""
+        """Generate a sensible default harness based on task keywords.
+
+        prompt_detail / optimize_models are accepted for API parity with the
+        Gemini path; the deterministic mock uses fixed template prompts so the
+        detail level does not change its output (keeps tests deterministic).
+        """
         slug = _make_slug(task_description)
         template = _pick_template(task_description, domain)
         data = template(slug, task_description, constraints)
+        # Stamp the short, stable workflow id (wf-<slug>) over the template's id.
+        data["organization"]["id"] = _make_short_id(task_description)
         if num_agents is not None and num_agents > 0:
             data = _expand_agents(data, num_agents)
         return load_harness_from_dict(data)
@@ -186,6 +221,31 @@ class HarnessCompiler:
 def _make_slug(text: str) -> str:
     words = re.sub(r"[^a-z0-9 ]", "", text.lower()).split()
     return "_".join(words[:4]) if words else "task"
+
+
+# Common filler words that add no signal to a short workflow id.
+_STOPWORDS = {
+    "a", "an", "the", "to", "of", "for", "and", "or", "with", "in", "on",
+    "per", "by", "implement", "add", "build", "create", "make", "fix",
+    "write", "design", "develop", "support", "feature", "system", "new",
+}
+
+
+def _make_short_id(text: str) -> str:
+    """Derive a short, stable workflow id from the task description.
+
+    Produces ``wf-<slug>`` where ``<slug>`` is a 4-24 char kebab-case label
+    built from the most meaningful words in the task. The id stays constant
+    across generations — versioning is tracked by organization.version, not by
+    appending ``_v2_v3`` suffixes.
+    """
+    words = re.sub(r"[^a-z0-9 ]", "", text.lower()).split()
+    keep = [w for w in words if w not in _STOPWORDS]
+    if not keep:
+        keep = words
+    slug = "".join(keep[:2]) if keep else "task"
+    slug = slug[:24] or "task"
+    return f"wf-{slug}"
 
 
 def _pick_template(task: str, domain: str):
@@ -609,6 +669,20 @@ def _normalize_for_mock_scoring(data: dict) -> dict:
     mp.setdefault("proposal_width", 3)
     mp.setdefault("exploration_strategy", "validation_gated_mutate_winner")
 
+    # Stamp the real model on every agent and guarantee each has at least its
+    # role's core toolset (union with whatever the model already assigned), so
+    # no agent is left under-equipped (e.g. a coder with only write_file).
+    for agent in data.get("agents", []):
+        if not agent.get("model"):
+            agent["model"] = DEFAULT_AGENT_MODEL
+        role_tools = tools_for_role(agent.get("id", ""), agent.get("role", ""))
+        existing = agent.get("tools") or []
+        merged = list(existing)
+        for t in role_tools:
+            if t not in merged:
+                merged.append(t)
+        agent["tools"] = merged
+
     return data
 
 
@@ -666,15 +740,16 @@ def _expand_agents(data: dict, target: int) -> dict:
 
 
 def _minimal_agent(agent_id: str, name: str, role: str) -> dict:
-    """Helper for non-core agents that only do a single read_files call."""
+    """Helper for non-core specialist agents with a role-appropriate toolset."""
     return {
         "id": agent_id,
         "name": name,
         "role": role,
         "responsibilities": ["Read relevant context.", "Provide specialist input."],
         "prompt": f"You are the {name}.\n{role}\nRead the context and provide your specialist assessment.",
-        "tools": ["read_files"],
-        "budget": {"max_tool_calls": 2, "max_runtime_seconds": 60},
+        "model": DEFAULT_AGENT_MODEL,
+        "tools": tools_for_role(agent_id, role),
+        "budget": {"max_tool_calls": 3, "max_runtime_seconds": 60},
         "memory_policy": {"read_shared": True, "write_shared": False},
         "output_contract": {"type": "markdown", "required_sections": ["Assessment"]},
     }

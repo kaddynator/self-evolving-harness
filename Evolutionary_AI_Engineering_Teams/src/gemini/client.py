@@ -97,6 +97,105 @@ class GeminiClient:
 
         return self._collect_stream(response)
 
+    # ------------------------------------------------------------------
+    # Function-calling (tool-use) support
+    # ------------------------------------------------------------------
+
+    def generate_with_tools(
+        self,
+        contents: List[Dict[str, Any]],
+        tool_declarations: Optional[List[Dict[str, Any]]] = None,
+        system_instruction: Optional[str] = None,
+        temperature: float = 0.2,
+        max_output_tokens: int = 2048,
+        thinking_budget: int = 0,
+        tool_mode: str = "AUTO",
+    ) -> Dict[str, Any]:
+        """Multi-turn generation that supports Gemini function calling.
+
+        `contents` is the full conversation so far (caller-managed), a list of
+        {"role": "user"|"model", "parts": [...]} turns. Parts may carry text,
+        functionCall, or functionResponse entries.
+
+        Returns {"text": str, "function_calls": [{"name", "args"}], "raw_parts": [...]}
+        where raw_parts is the model turn's parts verbatim (so the caller can
+        append it back into `contents` before sending tool results).
+        """
+        gen_config: Dict[str, Any] = {
+            "temperature": temperature,
+            "maxOutputTokens": max_output_tokens,
+        }
+        if thinking_budget is not None:
+            gen_config["thinkingConfig"] = {"thinkingBudget": thinking_budget}
+
+        payload: Dict[str, Any] = {
+            "contents": contents,
+            "generationConfig": gen_config,
+        }
+        if tool_declarations:
+            payload["tools"] = [{"functionDeclarations": tool_declarations}]
+            payload["toolConfig"] = {"functionCallingConfig": {"mode": tool_mode}}
+        if system_instruction:
+            payload["systemInstruction"] = {"parts": [{"text": system_instruction}]}
+
+        headers = {
+            "Authorization": f"Bearer {self._get_token()}",
+            "Content-Type": "application/json",
+        }
+        response = requests.post(
+            self._endpoint, headers=headers, json=payload, timeout=self._timeout
+        )
+        if not response.ok:
+            raise RuntimeError(
+                f"Gemini API error {response.status_code}: {response.text[:500]}"
+            )
+
+        chunks = self._load_chunks(response.text.strip())
+        return self._parse_parts(chunks)
+
+    @staticmethod
+    def _load_chunks(body: str) -> list:
+        """Parse a Vertex streamGenerateContent body into a list of chunk dicts.
+
+        Handles both the whole-body JSON array and line-by-line streaming forms.
+        """
+        try:
+            data = json.loads(body)
+            if isinstance(data, list):
+                return data
+            if isinstance(data, dict):
+                return [data]
+        except json.JSONDecodeError:
+            pass
+
+        chunks = []
+        for raw_line in body.splitlines():
+            line = raw_line.strip().lstrip(",").lstrip("[").rstrip("]").strip()
+            if not line:
+                continue
+            try:
+                chunks.append(json.loads(line))
+            except json.JSONDecodeError:
+                pass
+        return chunks
+
+    def _parse_parts(self, chunks: list) -> Dict[str, Any]:
+        """Collect text AND functionCall parts from response chunks."""
+        texts: List[str] = []
+        calls: List[Dict[str, Any]] = []
+        raw: List[Dict[str, Any]] = []
+        for chunk in chunks:
+            for candidate in chunk.get("candidates", []):
+                for part in candidate.get("content", {}).get("parts", []):
+                    raw.append(part)
+                    text = part.get("text", "")
+                    if text:
+                        texts.append(text)
+                    fc = part.get("functionCall")
+                    if fc:
+                        calls.append({"name": fc.get("name"), "args": fc.get("args", {}) or {}})
+        return {"text": "".join(texts), "function_calls": calls, "raw_parts": raw}
+
     def _collect_stream(self, response: requests.Response) -> str:
         """Collect the Vertex AI response and concatenate text parts.
 

@@ -1,10 +1,11 @@
 from __future__ import annotations
 
 import re
-from typing import Any, Dict, List
+from typing import Any, Callable, Dict, List, Optional
 
 from src.ir.schema import Agent
 from src.gemini.client import GeminiClient
+from src.runtime.tools import ToolSandbox, tool_declarations_for
 
 
 # System instruction handed to every agent role
@@ -148,4 +149,167 @@ def make_gemini_runner(
         mem.update(result.get("artifacts", {}))
         return result
 
+    return _runner
+
+
+# ---------------------------------------------------------------------------
+# Tool-using agent runner (real Gemini function calling against a sandbox)
+# ---------------------------------------------------------------------------
+
+def _function_response_part(name: str, result: Dict[str, Any]) -> Dict[str, Any]:
+    return {"functionResponse": {"name": name, "response": {"result": result}}}
+
+
+def _artifacts_from_sandbox(
+    agent: Agent,
+    sandbox: ToolSandbox,
+    text: str,
+    last_results: Dict[str, Dict[str, Any]],
+) -> Dict[str, Any]:
+    """Augment text-parsed artifacts with real signals from sandbox state.
+
+    Real signals (a git diff, a test exit code) override the text heuristics so
+    the scorer/judge get something concrete.
+    """
+    artifacts: Dict[str, Any] = {}
+    agent_id = agent.id.lower()
+
+    if "coder" in agent_id or "develop" in agent_id:
+        # Prefer an actual diff from the workspace over a fenced block in text.
+        if "```" not in text:
+            diff = sandbox.dispatch("git_diff", {}).get("diff", "")
+            if diff:
+                artifacts["code_patch"] = diff
+
+    if "tester" in agent_id or "qa" in agent_id:
+        rt = last_results.get("run_tests")
+        if isinstance(rt, dict) and "exit_code" in rt:
+            artifacts["test_results"] = {
+                "passed": "ok" if rt["exit_code"] == 0 else "fail",
+                "failed": 0 if rt["exit_code"] == 0 else 1,
+                "output": (rt.get("stdout", "") or rt.get("stderr", ""))[:400],
+            }
+
+    return artifacts
+
+
+def run_gemini_agent_with_tools(
+    agent: Agent,
+    client: GeminiClient,
+    sandbox: ToolSandbox,
+    shared_memory: Dict[str, Any] | None = None,
+    on_tool_call: Optional[Callable[[str, bool], None]] = None,
+) -> Dict[str, Any]:
+    """Execute one agent via a Gemini function-calling loop against the sandbox.
+
+    Returns the same result dict shape as run_mock_agent / run_gemini_agent.
+    """
+    shared_memory = shared_memory or {}
+    declarations = tool_declarations_for(agent.tools)
+
+    # No tools assigned → fall back to the plain text runner.
+    if not declarations:
+        return run_gemini_agent(agent, client, shared_memory=shared_memory)
+
+    contents: List[Dict[str, Any]] = [
+        {"role": "user", "parts": [{"text": _build_prompt(agent, shared_memory)}]}
+    ]
+    cap = max(1, agent.budget.max_tool_calls)
+    max_iters = cap + 2
+
+    tool_calls: List[Dict[str, Any]] = []
+    tool_count = 0
+    last_results: Dict[str, Dict[str, Any]] = {}
+    final_text = ""
+
+    for iteration in range(max_iters):
+        force_final = tool_count >= cap
+        try:
+            resp = client.generate_with_tools(
+                contents,
+                tool_declarations=declarations,
+                system_instruction=_HARNESS_SYSTEM,
+                tool_mode="NONE" if force_final else "AUTO",
+            )
+        except Exception as exc:
+            return {
+                "tool_calls": tool_calls,
+                "tool_call_count": tool_count,
+                "artifacts": {},
+                "output_text": f"[Gemini error] {exc}",
+                "success": False,
+            }
+
+        calls = resp.get("function_calls") or []
+        if not calls or force_final:
+            final_text = resp.get("text", "")
+            break
+
+        # Record the model's turn verbatim, then execute its tool calls.
+        contents.append({"role": "model", "parts": resp.get("raw_parts", [])})
+        fr_parts: List[Dict[str, Any]] = []
+        for call in calls:
+            name = call.get("name", "")
+            if tool_count >= cap:
+                result = {"error": "budget_exceeded"}
+                if on_tool_call:
+                    on_tool_call(name, False)
+            else:
+                result = sandbox.dispatch(name, call.get("args", {}))
+                tool_count += 1
+                ok = "error" not in result
+                last_results[name] = result
+                tool_calls.append({"tool": name, "result": result})
+                if on_tool_call:
+                    on_tool_call(name, ok)
+            fr_parts.append(_function_response_part(name, result))
+        contents.append({"role": "user", "parts": fr_parts})
+
+    artifacts = _parse_artifacts(final_text, agent)
+    artifacts.update(_artifacts_from_sandbox(agent, sandbox, final_text, last_results))
+
+    return {
+        "tool_calls": tool_calls,
+        "tool_call_count": tool_count,
+        "artifacts": artifacts,
+        "output_text": final_text,
+        "success": True,
+    }
+
+
+def make_gemini_tool_runner(client: GeminiClient, task=None):
+    """Return an AgentRunner with a `new_run()` hook for per-run isolation.
+
+    RuntimeExecutor.run() calls runner.new_run() (if present) at the start of
+    every run, so each run gets a fresh shared-memory dict and a fresh
+    ToolSandbox (the prior one is cleaned up). This avoids the cross-run leak of
+    the closure-based runner.
+    """
+    test_command = "pytest -q"
+    if task is not None:
+        try:
+            test_command = task.inputs.get("test_command", test_command)
+        except Exception:
+            pass
+
+    state: Dict[str, Any] = {"mem": {}, "sandbox": None}
+
+    def new_run() -> None:
+        old = state.get("sandbox")
+        if old is not None:
+            old.cleanup()
+        state["mem"] = {}
+        state["sandbox"] = ToolSandbox(test_command=test_command)
+
+    def _runner(agent: Agent, on_tool_call=None) -> Dict[str, Any]:
+        if state["sandbox"] is None:
+            new_run()
+        result = run_gemini_agent_with_tools(
+            agent, client, state["sandbox"],
+            shared_memory=state["mem"], on_tool_call=on_tool_call,
+        )
+        state["mem"].update(result.get("artifacts", {}))
+        return result
+
+    _runner.new_run = new_run  # type: ignore[attr-defined]
     return _runner

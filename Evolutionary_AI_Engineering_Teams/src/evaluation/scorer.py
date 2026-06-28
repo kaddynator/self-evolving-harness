@@ -72,8 +72,12 @@ def _score_metric(metric: Metric, raw: Dict[str, Any]) -> float:
     return base * metric.weight
 
 
-def _run_binary_check(check: BinaryCheck, raw: Dict[str, Any]) -> BinaryCheckResult:
-    """Deterministic binary checks — no LLM judge in MVP."""
+def _run_binary_check(
+    check: BinaryCheck,
+    raw: Dict[str, Any],
+    judge_verdicts: Optional[Dict[str, Any]] = None,
+) -> BinaryCheckResult:
+    """Binary checks. Uses LLM-judge verdicts when provided, else deterministic."""
     if check.verifier == "test_runner":
         passed = bool(raw.get("tests_pass", False))
         detail = "tests_pass metric" if passed else "tests failed"
@@ -83,10 +87,14 @@ def _run_binary_check(check: BinaryCheck, raw: Dict[str, Any]) -> BinaryCheckRes
         detail = "feature_works metric" if passed else "feature did not work"
 
     elif check.verifier == "llm_judge":
-        # Heuristic: patch is minimal if diff_size <= 30 lines
-        diff_size = raw.get("diff_size", 999)
-        passed = diff_size <= 30
-        detail = f"diff_size={diff_size} ({'ok' if passed else 'too large'})"
+        if judge_verdicts is not None and check.id in judge_verdicts:
+            passed = bool(judge_verdicts[check.id])
+            detail = f"llm_judge verdict: {'pass' if passed else 'fail'}"
+        else:
+            # Deterministic fallback: patch is minimal if diff_size <= 30 lines
+            diff_size = raw.get("diff_size", 999)
+            passed = diff_size <= 30
+            detail = f"diff_size={diff_size} ({'ok' if passed else 'too large'})"
 
     else:
         passed = False
@@ -101,9 +109,32 @@ def _run_binary_check(check: BinaryCheck, raw: Dict[str, Any]) -> BinaryCheckRes
     )
 
 
-def score_run(run: RunResult, evaluation: Evaluation) -> EvaluationResult:
-    """Compute metrics, binary checks, and weighted total score for a run."""
+def score_run(
+    run: RunResult,
+    evaluation: Evaluation,
+    *,
+    judge: Any = None,
+    harness: Any = None,
+) -> EvaluationResult:
+    """Compute metrics, binary checks, and weighted total score for a run.
+
+    When `judge` and `harness` are provided, the judge's verdicts override the
+    boolean signals the deterministic extractor cannot truly verify
+    (feature_works, reviewer_acceptance, tests_pass) and drive llm_judge checks.
+    With judge=None the behavior is unchanged (deterministic) — tests rely on this.
+    """
     raw = _extract_raw_metrics(run)
+
+    judge_verdicts: Optional[Dict[str, Any]] = None
+    if judge is not None and harness is not None:
+        try:
+            verdict = judge.grade(run, harness)
+            judge_verdicts = verdict.get("verdicts", {}) or {}
+            for k in ("tests_pass", "feature_works", "reviewer_acceptance"):
+                if k in judge_verdicts:
+                    raw[k] = bool(judge_verdicts[k])
+        except Exception:
+            judge_verdicts = None
 
     metric_scores: Dict[str, float] = {}
     for metric in evaluation.metrics:
@@ -112,7 +143,7 @@ def score_run(run: RunResult, evaluation: Evaluation) -> EvaluationResult:
     total = sum(metric_scores.values())
 
     binary_results = [
-        _run_binary_check(check, raw)
+        _run_binary_check(check, raw, judge_verdicts)
         for check in evaluation.binary_checks
     ]
 

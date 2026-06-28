@@ -49,10 +49,16 @@ class EvolutionPipeline:
         parent_evaluation: Optional[EvaluationResult] = None,
         agent_runner=None,
         event_bus: Optional["EventBus"] = None,
+        judge=None,
+        mutation_client=None,
+        optimize_models: bool = True,
     ) -> None:
         self._store = store
         self._parent_evaluation = parent_evaluation
         self._bus = event_bus
+        self._judge = judge
+        self._mutation_client = mutation_client
+        self._optimize_models = optimize_models
         self._executor = RuntimeExecutor(
             agent_runner=agent_runner or run_mock_agent,
             event_bus=event_bus,
@@ -78,7 +84,7 @@ class EvolutionPipeline:
         self._store.save_run(run)
 
         # 3. Evaluate
-        ev = score_run(run, harness.evaluation)
+        ev = score_run(run, harness.evaluation, judge=self._judge, harness=harness)
         self._store.save_evaluation(ev)
         self._emit(
             "evaluation_complete",
@@ -105,7 +111,11 @@ class EvolutionPipeline:
         )
 
         # 5. Propose mutations
-        proposals = propose_mutations(harness, sigs)
+        proposals = propose_mutations(
+            harness, sigs,
+            client=self._mutation_client,
+            optimize_models=self._optimize_models,
+        )
 
         # 6. Gate each candidate
         gate_decisions: List[GateDecision] = []
@@ -123,7 +133,7 @@ class EvolutionPipeline:
 
             # Run the candidate to get a real evaluation
             cand_run = self._executor.run(candidate, generation=generation)
-            cand_ev = score_run(cand_run, candidate.evaluation)
+            cand_ev = score_run(cand_run, candidate.evaluation, judge=self._judge, harness=candidate)
 
             decision = apply_validation_gate(
                 cand_ev,

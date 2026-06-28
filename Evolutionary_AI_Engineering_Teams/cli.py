@@ -198,45 +198,50 @@ def cmd_serve(args, store: MongoMemoryStore) -> int:
         # Clear all prior run state up-front so a new evolution starts clean.
         bus.clear_history()
 
-        # Architecture: Gemini designs the workflow (compilation), while the
-        # deterministic mock engine executes it. This gives real, intelligent
-        # workflow synthesis with fast, reliable, scorable evolution — and keeps
-        # the UI responsive (Gemini execution would be minutes per generation
-        # and wouldn't emit the artifacts the scorer relies on).
-        agent_runner = None  # always mock execution
-        compiler_client = None
+        # Real-model path: Gemini designs the workflow (compilation) AND executes
+        # every agent via a function-calling tool loop against a sandbox, with an
+        # LLM-as-judge for scoring and Gemini-driven prompt growth during
+        # evolution. If Gemini is unavailable we gracefully fall back to the
+        # deterministic mock so the UI never dead-ends.
+        exec_client = None
         fallback_note = ""
 
         if req.use_gemini:
             try:
                 from src.gemini.client import GeminiClient
-                compiler_client = GeminiClient(
+                exec_client = GeminiClient(
                     project_id=req.project_id, model_id=req.model_id
                 )
             except Exception as exc:  # auth / import / network at construction
-                fallback_note = f"Gemini unavailable ({type(exc).__name__}); using mock compiler."
-                compiler_client = None
+                fallback_note = f"Gemini unavailable ({type(exc).__name__}); using mock engine."
+                exec_client = None
 
-        compiler = HarnessCompiler(client=compiler_client)
+        compiler = HarnessCompiler(client=exec_client)
         harness = None
+        gemini_exec = exec_client is not None
         try:
             harness = compiler.compile(
                 req.task,
                 constraints=req.constraints or [],
                 domain=req.domain,
                 num_agents=req.num_agents,
+                prompt_detail=getattr(req, "prompt_detail", "detailed"),
+                optimize_models=getattr(req, "optimize_models", True),
             )
         except Exception as exc:  # CompilationError, RuntimeError (quota), etc.
-            # Gemini path failed — retry once with the deterministic mock compiler.
-            if compiler_client is not None:
-                fallback_note = f"Gemini compile failed ({type(exc).__name__}); using mock agents."
-                agent_runner = None
+            # Gemini compile failed — retry once with the deterministic mock
+            # compiler, and drop to mock execution too.
+            if exec_client is not None:
+                fallback_note = f"Gemini compile failed ({type(exc).__name__}); using mock engine."
+                gemini_exec = False
                 try:
                     harness = HarnessCompiler(client=None).compile(
                         req.task,
                         constraints=req.constraints or [],
                         domain=req.domain,
                         num_agents=req.num_agents,
+                        prompt_detail=getattr(req, "prompt_detail", "detailed"),
+                        optimize_models=getattr(req, "optimize_models", True),
                     )
                 except Exception as exc2:
                     harness = None
@@ -256,7 +261,26 @@ def cmd_serve(args, store: MongoMemoryStore) -> int:
         if fallback_note:
             print(f"[web] {fallback_note}")
 
-        pipeline = EvolutionPipeline(store, agent_runner=agent_runner, event_bus=bus)
+        # Build the real-model execution stack when Gemini is available.
+        agent_runner = None
+        judge = None
+        mutation_client = None
+        if gemini_exec:
+            from src.gemini.agent_runner import make_gemini_tool_runner
+            from src.evaluation.judge import GeminiJudge
+            agent_runner = make_gemini_tool_runner(exec_client, task=harness.task)
+            judge = GeminiJudge(exec_client)
+            mutation_client = exec_client
+            print("[web] Running with real Gemini execution (tools + judge + prompt growth).")
+
+        pipeline = EvolutionPipeline(
+            store,
+            agent_runner=agent_runner,
+            event_bus=bus,
+            judge=judge,
+            mutation_client=mutation_client,
+            optimize_models=getattr(req, "optimize_models", True),
+        )
         stop_ev = getattr(req, '_stop_event', None)
         pipeline.run_evolution(harness, max_generations=req.max_generations, stop_event=stop_ev)
 
