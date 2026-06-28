@@ -1281,6 +1281,83 @@ input[type=range]::-webkit-slider-thumb{
   </div>
 
   <!-- ============================================================= -->
+  <!-- 1a. SYSTEM ARCHITECTURE (core pipeline, canonical)            -->
+  <!-- ============================================================= -->
+  <h2>System Architecture</h2>
+  <p class="lead">
+    The core pipeline. A task specification enters at the top; six stages run in order, and the
+    <strong style="color:#a855f7;">Evolution Engine</strong> loops back to the
+    <strong style="color:#06b6d4;">Team Compiler</strong> to produce the next organization version.
+    Everything the loop learns is persisted to <strong style="color:#22c55e;">MongoDB</strong>.
+  </p>
+
+  <div class="card" style="padding:8px;">
+  <svg viewBox="0 0 980 720" font-family="system-ui" role="img" aria-label="Core pipeline system architecture">
+    <defs>
+      <marker id="saah" markerWidth="9" markerHeight="9" refX="4" refY="7" orient="auto" markerUnits="strokeWidth">
+        <path d="M0,0 L8,0 L4,7 Z" fill="#475569"/>
+      </marker>
+      <marker id="saloop" markerWidth="9" markerHeight="9" refX="7" refY="3" orient="auto" markerUnits="strokeWidth">
+        <path d="M0,0 L7,3 L0,6 Z" fill="#a855f7"/>
+      </marker>
+      <marker id="samem" markerWidth="9" markerHeight="9" refX="7" refY="3" orient="auto" markerUnits="strokeWidth">
+        <path d="M0,0 L7,3 L0,6 Z" fill="#22c55e"/>
+      </marker>
+    </defs>
+
+    <!-- Task Specification -->
+    <rect x="300" y="20" width="380" height="56" rx="12" fill="rgba(255,255,255,.04)" stroke="rgba(255,255,255,.10)"/>
+    <text x="490" y="44" text-anchor="middle" fill="#f1f5f9" font-size="14" font-weight="700">Task Specification</text>
+    <text x="490" y="63" text-anchor="middle" fill="#94a3b8" font-size="11">plain-language task · constraints · domain · prior lessons</text>
+
+    <!-- 1. Team Compiler -->
+    <rect x="270" y="116" width="440" height="78" rx="12" fill="rgba(6,182,212,.10)" stroke="#06b6d4"/>
+    <text x="490" y="142" text-anchor="middle" fill="#67e8f9" font-size="14" font-weight="700">Team Compiler</text>
+    <text x="490" y="162" text-anchor="middle" fill="#94a3b8" font-size="11">creates agents · assigns prompts</text>
+    <text x="490" y="178" text-anchor="middle" fill="#94a3b8" font-size="11">assigns tools · defines communication graph</text>
+
+    <!-- 2. Runtime -->
+    <rect x="270" y="234" width="440" height="70" rx="12" fill="rgba(6,182,212,.10)" stroke="#06b6d4"/>
+    <text x="490" y="262" text-anchor="middle" fill="#67e8f9" font-size="14" font-weight="700">Runtime</text>
+    <text x="490" y="284" text-anchor="middle" fill="#94a3b8" font-size="11">executes agents inside isolated sandboxes</text>
+
+    <!-- 3. Evaluator -->
+    <rect x="270" y="344" width="440" height="78" rx="12" fill="rgba(34,197,94,.10)" stroke="#22c55e"/>
+    <text x="490" y="370" text-anchor="middle" fill="#86efac" font-size="14" font-weight="700">Evaluator</text>
+    <text x="490" y="390" text-anchor="middle" fill="#94a3b8" font-size="11">scores task success · counts tool calls</text>
+    <text x="490" y="406" text-anchor="middle" fill="#94a3b8" font-size="11">measures runtime · grades code quality</text>
+
+    <!-- 4. Evolution Engine -->
+    <rect x="270" y="462" width="440" height="86" rx="12" fill="rgba(168,85,247,.12)" stroke="#a855f7"/>
+    <text x="490" y="488" text-anchor="middle" fill="#c4b5fd" font-size="14" font-weight="700">Evolution Engine</text>
+    <text x="490" y="508" text-anchor="middle" fill="#94a3b8" font-size="11">add / remove agents · update prompts</text>
+    <text x="490" y="524" text-anchor="middle" fill="#94a3b8" font-size="11">change tool permissions · change execution order</text>
+    <text x="490" y="540" text-anchor="middle" fill="#94a3b8" font-size="11">adjust execution budget</text>
+
+    <!-- 5. Memory / MongoDB -->
+    <rect x="270" y="588" width="440" height="86" rx="12" fill="rgba(34,197,94,.10)" stroke="#22c55e"/>
+    <text x="490" y="614" text-anchor="middle" fill="#86efac" font-size="14" font-weight="700">Memory · MongoDB</text>
+    <text x="490" y="634" text-anchor="middle" fill="#94a3b8" font-size="11">organization versions · evaluation scores</text>
+    <text x="490" y="650" text-anchor="middle" fill="#94a3b8" font-size="11">lessons learned · successful organization patterns</text>
+
+    <!-- vertical connectors -->
+    <line x1="490" y1="76" x2="490" y2="112" stroke="#475569" stroke-width="2" marker-end="url(#saah)"/>
+    <line x1="490" y1="194" x2="490" y2="230" stroke="#475569" stroke-width="2" marker-end="url(#saah)"/>
+    <line x1="490" y1="304" x2="490" y2="340" stroke="#475569" stroke-width="2" marker-end="url(#saah)"/>
+    <line x1="490" y1="422" x2="490" y2="458" stroke="#475569" stroke-width="2" marker-end="url(#saah)"/>
+    <line x1="490" y1="548" x2="490" y2="584" stroke="#475569" stroke-width="2" marker-end="url(#samem)"/>
+
+    <!-- loop-back: Evolution Engine -> Team Compiler (next organization version) -->
+    <path d="M270,505 C120,505 120,155 266,155" fill="none" stroke="#a855f7" stroke-width="2" stroke-dasharray="6 4" marker-end="url(#saloop)"/>
+    <text x="96" y="330" text-anchor="middle" fill="#c4b5fd" font-size="11" transform="rotate(-90 96 330)">loop · next organization version</text>
+
+    <!-- memory feeds compiler (lessons + patterns) -->
+    <path d="M710,631 C880,631 880,155 714,155" fill="none" stroke="#22c55e" stroke-width="2" stroke-dasharray="6 4" marker-end="url(#samem)"/>
+    <text x="884" y="393" text-anchor="middle" fill="#86efac" font-size="11" transform="rotate(90 884 393)">lessons + winning patterns</text>
+  </svg>
+  </div>
+
+  <!-- ============================================================= -->
   <!-- 1b. FEEDBACK FLYWHEEL & EVAL DATASET                          -->
   <!-- ============================================================= -->
   <h2>Feedback Flywheel &amp; Eval Dataset</h2>
@@ -1654,6 +1731,119 @@ input[type=range]::-webkit-slider-thumb{
       <rect x="470" y="402" width="12" height="12" rx="3" fill="rgba(248,113,113,.10)" stroke="#f87171"/><text x="488" y="412" fill="#94a3b8">removed agent</text>
     </g>
   </svg>
+  </div>
+
+  <!-- ============================================================= -->
+  <!-- 4b. EVOLUTION IN ACTION (V1 -> V2 -> V3)                      -->
+  <!-- ============================================================= -->
+  <h2>Evolution in action (V1 → V2 → V3)</h2>
+  <p>
+    A concrete three-generation trace. The roster <em>grows and shrinks</em> as the engine
+    learns: V1 fails, so a Requirements agent is added; V2 passes but burns too many tool calls,
+    so the Reviewer prompt is improved and the Planner is removed. V3 is tighter, cheaper, faster.
+  </p>
+
+  <div class="card" style="padding:8px;">
+  <svg viewBox="0 0 980 430" font-family="system-ui" role="img" aria-label="Evolution in action V1 to V2 to V3">
+    <defs>
+      <marker id="evxah" markerWidth="9" markerHeight="9" refX="7" refY="3" orient="auto" markerUnits="strokeWidth">
+        <path d="M0,0 L7,3 L0,6 Z" fill="#a855f7"/>
+      </marker>
+    </defs>
+
+    <!-- ===== V1 column ===== -->
+    <text x="150" y="34" text-anchor="middle" fill="#cbd5e1" font-size="13" font-weight="700">V1 · 4 agents</text>
+    <rect x="70" y="48" width="160" height="218" rx="12" fill="rgba(255,255,255,.04)" stroke="rgba(248,113,113,.40)"/>
+    <rect x="86" y="64" width="128" height="22" rx="6" fill="rgba(6,182,212,.12)" stroke="#06b6d4"/><text x="150" y="79" text-anchor="middle" fill="#67e8f9" font-size="11">Planner</text>
+    <rect x="86" y="92" width="128" height="22" rx="6" fill="rgba(6,182,212,.12)" stroke="#06b6d4"/><text x="150" y="107" text-anchor="middle" fill="#67e8f9" font-size="11">Coder</text>
+    <rect x="86" y="120" width="128" height="22" rx="6" fill="rgba(6,182,212,.12)" stroke="#06b6d4"/><text x="150" y="135" text-anchor="middle" fill="#67e8f9" font-size="11">Tester</text>
+    <rect x="86" y="148" width="128" height="22" rx="6" fill="rgba(6,182,212,.12)" stroke="#06b6d4"/><text x="150" y="163" text-anchor="middle" fill="#67e8f9" font-size="11">Reviewer</text>
+    <rect x="86" y="220" width="128" height="30" rx="8" fill="rgba(248,113,113,.12)" stroke="#f87171"/>
+    <text x="150" y="239" text-anchor="middle" fill="#fca5a5" font-size="12" font-weight="700">✗ FAILED</text>
+
+    <!-- ===== V2 column ===== -->
+    <text x="490" y="34" text-anchor="middle" fill="#cbd5e1" font-size="13" font-weight="700">V2 · 5 agents</text>
+    <rect x="410" y="48" width="160" height="218" rx="12" fill="rgba(255,255,255,.04)" stroke="rgba(245,158,11,.40)"/>
+    <rect x="426" y="64" width="128" height="22" rx="6" fill="rgba(34,197,94,.16)" stroke="#22c55e"/><text x="490" y="79" text-anchor="middle" fill="#86efac" font-size="11">Requirements +</text>
+    <rect x="426" y="92" width="128" height="22" rx="6" fill="rgba(6,182,212,.12)" stroke="#06b6d4"/><text x="490" y="107" text-anchor="middle" fill="#67e8f9" font-size="11">Planner</text>
+    <rect x="426" y="120" width="128" height="22" rx="6" fill="rgba(6,182,212,.12)" stroke="#06b6d4"/><text x="490" y="135" text-anchor="middle" fill="#67e8f9" font-size="11">Coder</text>
+    <rect x="426" y="148" width="128" height="22" rx="6" fill="rgba(6,182,212,.12)" stroke="#06b6d4"/><text x="490" y="163" text-anchor="middle" fill="#67e8f9" font-size="11">Tester</text>
+    <rect x="426" y="176" width="128" height="22" rx="6" fill="rgba(6,182,212,.12)" stroke="#06b6d4"/><text x="490" y="191" text-anchor="middle" fill="#67e8f9" font-size="11">Reviewer</text>
+    <rect x="426" y="220" width="128" height="30" rx="8" fill="rgba(245,158,11,.12)" stroke="#f59e0b"/>
+    <text x="490" y="234" text-anchor="middle" fill="#fcd34d" font-size="11" font-weight="700">✓ tests pass</text>
+    <text x="490" y="247" text-anchor="middle" fill="#fcd34d" font-size="10">too many tool calls</text>
+
+    <!-- ===== V3 column ===== -->
+    <text x="830" y="34" text-anchor="middle" fill="#cbd5e1" font-size="13" font-weight="700">V3 · 4 agents</text>
+    <rect x="750" y="48" width="160" height="218" rx="12" fill="rgba(255,255,255,.04)" stroke="rgba(34,197,94,.45)"/>
+    <rect x="766" y="64" width="128" height="22" rx="6" fill="rgba(34,197,94,.14)" stroke="#22c55e"/><text x="830" y="79" text-anchor="middle" fill="#86efac" font-size="11">Requirements</text>
+    <rect x="766" y="92" width="128" height="22" rx="6" fill="rgba(34,197,94,.14)" stroke="#22c55e"/><text x="830" y="107" text-anchor="middle" fill="#86efac" font-size="11">Coder</text>
+    <rect x="766" y="120" width="128" height="22" rx="6" fill="rgba(34,197,94,.14)" stroke="#22c55e"/><text x="830" y="135" text-anchor="middle" fill="#86efac" font-size="11">Tester</text>
+    <rect x="766" y="148" width="128" height="22" rx="6" fill="rgba(34,197,94,.18)" stroke="#22c55e"/><text x="830" y="163" text-anchor="middle" fill="#86efac" font-size="11">Reviewer ✎</text>
+    <rect x="766" y="220" width="128" height="30" rx="8" fill="rgba(34,197,94,.14)" stroke="#22c55e"/>
+    <text x="830" y="234" text-anchor="middle" fill="#86efac" font-size="11" font-weight="700">✓ tests pass</text>
+    <text x="830" y="247" text-anchor="middle" fill="#86efac" font-size="10">fewer calls · faster</text>
+
+    <!-- mutation arrows between columns -->
+    <line x1="230" y1="150" x2="406" y2="150" stroke="#a855f7" stroke-width="2" marker-end="url(#evxah)"/>
+    <text x="318" y="138" text-anchor="middle" fill="#c4b5fd" font-size="11" font-weight="600">+ Requirements</text>
+
+    <line x1="570" y1="150" x2="746" y2="150" stroke="#a855f7" stroke-width="2" marker-end="url(#evxah)"/>
+    <text x="658" y="132" text-anchor="middle" fill="#c4b5fd" font-size="11" font-weight="600">− Planner</text>
+    <text x="658" y="146" text-anchor="middle" fill="#c4b5fd" font-size="11" font-weight="600">✎ improve Reviewer</text>
+
+    <!-- metrics strip -->
+    <line x1="70" y1="300" x2="910" y2="300" stroke="rgba(255,255,255,.10)"/>
+    <text x="70" y="326" fill="#94a3b8" font-size="12" font-weight="700">Metrics</text>
+
+    <text x="240" y="326" fill="#94a3b8" font-size="12">tests</text>
+    <text x="340" y="326" fill="#fca5a5" font-size="12" font-weight="700">✗</text>
+    <text x="360" y="326" fill="#94a3b8" font-size="12">→</text>
+    <text x="380" y="326" fill="#86efac" font-size="12" font-weight="700">✓</text>
+    <text x="400" y="326" fill="#94a3b8" font-size="12">→</text>
+    <text x="420" y="326" fill="#86efac" font-size="12" font-weight="700">✓</text>
+
+    <text x="240" y="352" fill="#94a3b8" font-size="12">tool calls</text>
+    <text x="340" y="352" fill="#fca5a5" font-size="12" font-weight="700">high</text>
+    <text x="380" y="352" fill="#94a3b8" font-size="12">→</text>
+    <text x="402" y="352" fill="#fcd34d" font-size="12" font-weight="700">high</text>
+    <text x="442" y="352" fill="#94a3b8" font-size="12">→</text>
+    <text x="464" y="352" fill="#86efac" font-size="12" font-weight="700">fewer</text>
+
+    <text x="240" y="378" fill="#94a3b8" font-size="12">runtime</text>
+    <text x="340" y="378" fill="#94a3b8" font-size="12">—</text>
+    <text x="360" y="378" fill="#94a3b8" font-size="12">→</text>
+    <text x="380" y="378" fill="#94a3b8" font-size="12">—</text>
+    <text x="400" y="378" fill="#94a3b8" font-size="12">→</text>
+    <text x="422" y="378" fill="#86efac" font-size="12" font-weight="700">faster</text>
+
+    <!-- legend -->
+    <g font-size="11">
+      <rect x="600" y="316" width="12" height="12" rx="3" fill="rgba(34,197,94,.16)" stroke="#22c55e"/><text x="618" y="326" fill="#94a3b8">added / kept</text>
+      <rect x="600" y="342" width="12" height="12" rx="3" fill="rgba(248,113,113,.12)" stroke="#f87171"/><text x="618" y="352" fill="#94a3b8">failure / removed (− Planner)</text>
+      <text x="600" y="378" fill="#c4b5fd" font-weight="700">✎</text><text x="618" y="378" fill="#94a3b8">prompt improved</text>
+    </g>
+  </svg>
+  </div>
+
+  <!-- ============================================================= -->
+  <!-- 4c. SPONSOR STACK                                            -->
+  <!-- ============================================================= -->
+  <h2>Sponsor stack</h2>
+  <p>Three pillars power the loop end to end.</p>
+  <div class="grid">
+    <div class="card">
+      <div style="font-weight:700;color:#a855f7;">Gemini</div>
+      <p class="muted">The LLM compiler and mutator. Powers <strong>team compilation</strong>, <strong>prompt generation</strong>, <strong>agent mutations</strong>, and <strong>code generation</strong>.</p>
+    </div>
+    <div class="card">
+      <div style="font-weight:700;color:#22c55e;">MongoDB</div>
+      <p class="muted">The organization's long-term memory. Stores <strong>persistent org memory</strong>, <strong>evaluation history</strong>, and <strong>learned organization patterns</strong>.</p>
+    </div>
+    <div class="card">
+      <div style="font-weight:700;color:#06b6d4;">DigitalOcean</div>
+      <p class="muted">The execution fabric. Provides <strong>parallel sandbox execution</strong> across <strong>isolated worker environments</strong>.</p>
+    </div>
   </div>
 
   <!-- ============================================================= -->

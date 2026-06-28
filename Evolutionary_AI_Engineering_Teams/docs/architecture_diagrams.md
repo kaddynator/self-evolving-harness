@@ -37,6 +37,46 @@
 
 ---
 
+## 1b. Evolution in Action: V1 → V2 → V3
+
+The headline demo: the same organization evolves across three generations.
+Agents are **added and removed**, and the scored metrics improve each step.
+
+```
+  ┌─────────────────────────────┐   FAILED
+  │  TEAM V1   (4 agents)       │   ─────────────────────────────
+  │                             │   tests:        FAIL
+  │  Planner ─▶ Coder ─▶ Tester │   tool calls:   —
+  │              └─▶ Reviewer   │   runtime:      —
+  └─────────────────────────────┘
+                 │
+                 │  mutation:  + ADD Requirements agent
+                 ▼
+  ┌──────────────────────────────────────────┐   TESTS PASS, but...
+  │  TEAM V2   (5 agents)                     │   ───────────────────────
+  │                                           │   tests:        PASS
+  │  Requirements ─▶ Planner ─▶ Coder         │   tool calls:   TOO MANY ▲
+  │                    └─▶ Tester ─▶ Reviewer │   runtime:      slow
+  └──────────────────────────────────────────┘
+                 │
+                 │  mutations:  * IMPROVE Reviewer prompt
+                 │              - REMOVE Planner
+                 ▼
+  ┌──────────────────────────────────────────┐   BEST
+  │  TEAM V3   (4 agents)                     │   ───────────────────────
+  │                                           │   tests:        PASS
+  │  Requirements ─▶ Coder ─▶ Tester          │   tool calls:   FEWER  ▼
+  │                    └─▶ Reviewer           │   runtime:      FASTER ▼
+  └──────────────────────────────────────────┘
+
+  Net across generations:  +1 agent added (Requirements),
+                           -1 agent removed (Planner),
+                           1 prompt improved (Reviewer)
+                           → strictly better organization.
+```
+
+---
+
 ## 2. Organization Harness IR (the core data structure)
 
 ```
@@ -688,4 +728,38 @@
 
   Kuzu (embedded, in-process)
   └── /tmp/kuzu_harness  (topology gene pool graph)
+```
+
+---
+
+## 14. Sponsor Stack
+
+Each sponsor technology owns a distinct stage of the evolution loop.
+
+```
+  ┌──────────────────────────────────────────────────────────────────┐
+  │                       THE EVOLUTION LOOP                          │
+  └──────────────────────────────────────────────────────────────────┘
+
+   Task ─▶ [ COMPILE ] ─▶ [ RUN ] ─▶ [ SCORE ] ─▶ [ MUTATE ] ─▶ [ REMEMBER ]
+              │              │                        │              │
+              ▼              ▼                        ▼              ▼
+        ┌──────────┐   ┌──────────┐            ┌──────────┐   ┌──────────┐
+        │  GEMINI  │   │ DIGITAL  │            │  GEMINI  │   │ MONGODB  │
+        │          │   │  OCEAN   │            │          │   │          │
+        └──────────┘   └──────────┘            └──────────┘   └──────────┘
+
+  ┌──────────────┬───────────────────────────────────────────────────┐
+  │  GEMINI      │  • Team compilation (task → organization)          │
+  │              │  • Prompt generation                               │
+  │              │  • Agent mutations                                 │
+  │              │  • Code generation (in-agent tool/function calls)  │
+  ├──────────────┼───────────────────────────────────────────────────┤
+  │  MONGODB     │  • Persistent organization memory (org versions)   │
+  │              │  • Evaluation history (scores per generation)      │
+  │              │  • Learned organization patterns + lessons         │
+  ├──────────────┼───────────────────────────────────────────────────┤
+  │  DIGITALOCEAN│  • Parallel sandbox execution                      │
+  │              │  • Isolated worker environments (per-agent)        │
+  └──────────────┴───────────────────────────────────────────────────┘
 ```
