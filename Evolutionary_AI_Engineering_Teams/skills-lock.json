@@ -1,0 +1,11 @@
+{
+  "version": 1,
+  "skills": {
+    "app-platform-router": {
+      "source": "digitalocean-labs/do-app-platform-skills",
+      "sourceType": "github",
+      "skillPath": "SKILL.md",
+      "computedHash": "7f1da134afcf7ad50f293d646cfa5d01169c7d1594cac9096a30b5d7dcdfa521"
+    }
+  }
+}
