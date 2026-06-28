@@ -12,4 +12,7 @@ services:
       GOOGLE_APPLICATION_CREDENTIALS: /secrets/adc.json
     volumes:
       - ./secrets/adc.json:/secrets/adc.json:ro
+      # Live source mount: code changes apply on `restart` (no image rebuild).
+      - ./src:/app/src
+      - ./cli.py:/app/cli.py
     restart: unless-stopped
