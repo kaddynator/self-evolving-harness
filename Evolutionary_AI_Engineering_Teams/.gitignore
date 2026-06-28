@@ -32,3 +32,6 @@ env/
 .env.*
 !.env.example
 secrets/
+
+# Large local recordings (keep on disk, not in git)
+*.mov
