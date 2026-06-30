@@ -1,0 +1,72 @@
+<svg viewBox="0 0 980 610" font-family="system-ui,sans-serif" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Nine-stage generation flow">
+  <rect width="980" height="610" fill="#0f172a" rx="16"/>
+  <defs>
+    <marker id="vdn" markerWidth="9" markerHeight="9" refX="4" refY="7" orient="auto" markerUnits="strokeWidth">
+      <path d="M0,0 L8,0 L4,7 Z" fill="#475569"/>
+    </marker>
+  </defs>
+
+  <!-- Stage 1 -->
+  <circle cx="46" cy="46" r="18" fill="rgba(168,85,247,.15)" stroke="#a855f7"/><text x="46" y="51" text-anchor="middle" fill="#c4b5fd" font-size="14" font-weight="700">1</text>
+  <rect x="80" y="24" width="880" height="44" rx="10" fill="rgba(255,255,255,.04)" stroke="rgba(255,255,255,.08)"/>
+  <text x="98" y="42" fill="#f1f5f9" font-size="13" font-weight="700">Compile / load harness</text>
+  <text x="98" y="59" fill="#94a3b8" font-size="11">Persist the parent organization to the store; this is the workflow to be measured and improved.</text>
+
+  <!-- Stage 2 -->
+  <circle cx="46" cy="108" r="18" fill="rgba(6,182,212,.15)" stroke="#06b6d4"/><text x="46" y="113" text-anchor="middle" fill="#67e8f9" font-size="14" font-weight="700">2</text>
+  <rect x="80" y="86" width="880" height="44" rx="10" fill="rgba(255,255,255,.04)" stroke="rgba(255,255,255,.08)"/>
+  <text x="98" y="104" fill="#f1f5f9" font-size="13" font-weight="700">Run</text>
+  <text x="98" y="121" fill="#94a3b8" font-size="11">RuntimeExecutor steps each phase; agents call sandboxed tools (mock or real Gemini function-calling). Save the RunResult.</text>
+
+  <!-- Stage 3 -->
+  <circle cx="46" cy="170" r="18" fill="rgba(34,197,94,.15)" stroke="#22c55e"/><text x="46" y="175" text-anchor="middle" fill="#86efac" font-size="14" font-weight="700">3</text>
+  <rect x="80" y="148" width="880" height="44" rx="10" fill="rgba(255,255,255,.04)" stroke="rgba(255,255,255,.08)"/>
+  <text x="98" y="166" fill="#f1f5f9" font-size="13" font-weight="700">Evaluate</text>
+  <text x="98" y="183" fill="#94a3b8" font-size="11">score_run() computes weighted-sum metrics + binary checks; an optional Gemini judge overrides booleans it can truly verify.</text>
+
+  <!-- Stage 4 -->
+  <circle cx="46" cy="232" r="18" fill="rgba(236,72,153,.15)" stroke="#ec4899"/><text x="46" y="237" text-anchor="middle" fill="#f9a8d4" font-size="14" font-weight="700">4</text>
+  <rect x="80" y="210" width="880" height="44" rx="10" fill="rgba(255,255,255,.04)" stroke="rgba(255,255,255,.08)"/>
+  <text x="98" y="228" fill="#f1f5f9" font-size="13" font-weight="700">Mine weaknesses</text>
+  <text x="98" y="245" fill="#94a3b8" font-size="11">Rule classifiers emit FailureSignatures (verifier_cause · agent_behavior · mechanism); deduplicated and stored as lessons.</text>
+
+  <!-- Stage 5 -->
+  <circle cx="46" cy="294" r="18" fill="rgba(168,85,247,.15)" stroke="#a855f7"/><text x="46" y="299" text-anchor="middle" fill="#c4b5fd" font-size="14" font-weight="700">5</text>
+  <rect x="80" y="272" width="880" height="44" rx="10" fill="rgba(255,255,255,.04)" stroke="rgba(255,255,255,.08)"/>
+  <text x="98" y="290" fill="#f1f5f9" font-size="13" font-weight="700">Propose mutations</text>
+  <text x="98" y="307" fill="#94a3b8" font-size="11">Each mechanism maps to mutation rules (filtered by mutation_policy), producing up to proposal_width candidate harnesses.</text>
+
+  <!-- Stage 6 -->
+  <circle cx="46" cy="356" r="18" fill="rgba(6,182,212,.15)" stroke="#06b6d4"/><text x="46" y="361" text-anchor="middle" fill="#67e8f9" font-size="14" font-weight="700">6</text>
+  <rect x="80" y="334" width="880" height="44" rx="10" fill="rgba(255,255,255,.04)" stroke="rgba(255,255,255,.08)"/>
+  <text x="98" y="352" fill="#f1f5f9" font-size="13" font-weight="700">Run candidates</text>
+  <text x="98" y="369" fill="#94a3b8" font-size="11">Every candidate harness is executed for real and scored — no candidate is judged on prediction alone.</text>
+
+  <!-- Stage 7 -->
+  <circle cx="46" cy="418" r="18" fill="rgba(245,158,11,.15)" stroke="#f59e0b"/><text x="46" y="423" text-anchor="middle" fill="#fcd34d" font-size="14" font-weight="700">7</text>
+  <rect x="80" y="396" width="880" height="44" rx="10" fill="rgba(255,255,255,.04)" stroke="rgba(255,255,255,.08)"/>
+  <text x="98" y="414" fill="#f1f5f9" font-size="13" font-weight="700">Gate</text>
+  <text x="98" y="431" fill="#94a3b8" font-size="11">apply_validation_gate(): reject on any regression or no improvement or runtime overrun; accept the first qualifying candidate.</text>
+
+  <!-- Stage 8 -->
+  <circle cx="46" cy="480" r="18" fill="rgba(34,197,94,.15)" stroke="#22c55e"/><text x="46" y="485" text-anchor="middle" fill="#86efac" font-size="14" font-weight="700">8</text>
+  <rect x="80" y="458" width="880" height="44" rx="10" fill="rgba(255,255,255,.04)" stroke="rgba(255,255,255,.08)"/>
+  <text x="98" y="476" fill="#f1f5f9" font-size="13" font-weight="700">Persist</text>
+  <text x="98" y="493" fill="#94a3b8" font-size="11">Save the accepted candidate's organization, run, and evaluation; record every gate decision as a mutation record.</text>
+
+  <!-- Stage 9 -->
+  <circle cx="46" cy="542" r="18" fill="rgba(168,85,247,.15)" stroke="#a855f7"/><text x="46" y="547" text-anchor="middle" fill="#c4b5fd" font-size="14" font-weight="700">9</text>
+  <rect x="80" y="520" width="880" height="44" rx="10" fill="rgba(255,255,255,.04)" stroke="rgba(255,255,255,.08)"/>
+  <text x="98" y="538" fill="#f1f5f9" font-size="13" font-weight="700">Chain</text>
+  <text x="98" y="555" fill="#94a3b8" font-size="11">The accepted candidate becomes the parent for generation N+1; if none accepted, the same harness is carried forward.</text>
+
+  <!-- connectors -->
+  <line x1="46" y1="64" x2="46" y2="90" stroke="#475569" stroke-width="2" marker-end="url(#vdn)"/>
+  <line x1="46" y1="126" x2="46" y2="152" stroke="#475569" stroke-width="2" marker-end="url(#vdn)"/>
+  <line x1="46" y1="188" x2="46" y2="214" stroke="#475569" stroke-width="2" marker-end="url(#vdn)"/>
+  <line x1="46" y1="250" x2="46" y2="276" stroke="#475569" stroke-width="2" marker-end="url(#vdn)"/>
+  <line x1="46" y1="312" x2="46" y2="338" stroke="#475569" stroke-width="2" marker-end="url(#vdn)"/>
+  <line x1="46" y1="374" x2="46" y2="400" stroke="#475569" stroke-width="2" marker-end="url(#vdn)"/>
+  <line x1="46" y1="436" x2="46" y2="462" stroke="#475569" stroke-width="2" marker-end="url(#vdn)"/>
+  <line x1="46" y1="498" x2="46" y2="524" stroke="#475569" stroke-width="2" marker-end="url(#vdn)"/>
+</svg>

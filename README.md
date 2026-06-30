@@ -12,7 +12,7 @@
 
 ## Demo
 
-> Click the thumbnail below to watch the demo video (opens GitHub's inline video player)
+> Click the thumbnail to watch the demo video
 
 [![Watch Demo](Evolutionary_AI_Engineering_Teams/artifacts/Screenshot%202026-06-28%20at%2012.09.41%20PM.png)](https://github.com/kaddynator/self-evolving-harness/blob/main/Evolutionary_AI_Engineering_Teams/dist/harness-demo.mp4)
 
@@ -54,35 +54,25 @@ When the evolved workflow is still wrong, humans label the correct output. That 
 
 ## Architecture
 
-```
-Task Description (plain English)
-        │
-        ▼
-  HarnessCompiler  ──Gemini/Claude──▶  OrganizationHarness IR (YAML)
-        │
-        ▼
-  RuntimeExecutor  ──agents──▶  RunResult (trace + artifacts)
-        │
-        ▼
-  Evaluator  ──LLM Judge──▶  EvaluationResult (score 0–100)
-        │
-        ▼
-  WeaknessMiner  ──▶  FailureSignatures
-        │
-        ▼
-  EvolutionEngine  ──▶  Candidate Harnesses (8 mutation operators)
-        │
-        ▼
-  ValidationGate  ──▶  Accept / Reject each candidate
-        │
-        ▼
-  MongoMemoryStore  ──▶  Persist runs, evaluations, mutations, lessons
-        │
-        ▼  (loop)
-  Next Generation
-```
+![End-to-end architecture](Evolutionary_AI_Engineering_Teams/assets/arch-overview.svg)
 
 The **Organization Harness IR** is the central data structure — a fully executable YAML spec defining agents, topology, evaluation criteria, and mutation policy. Every generation increments the version; the lineage is fully traceable by `organization.id`.
+
+---
+
+## How a Generation Works
+
+Each evolution cycle runs 9 stages — compile, run, evaluate, mine, propose, run candidates, gate, persist, chain:
+
+![Nine-stage generation flow](Evolutionary_AI_Engineering_Teams/assets/arch-generation.svg)
+
+---
+
+## How Workflows Evolve
+
+Each accepted mutation changes one surface — a prompt, a budget, a tool, a model, or the agent roster. Scores climb as redundancy is pruned and weak agents are strengthened:
+
+![Workflow evolution across generations](Evolutionary_AI_Engineering_Teams/assets/arch-evolution.svg)
 
 ---
 
@@ -107,15 +97,7 @@ Each mutation is run end-to-end and rejected if it:
 - Fails to improve at least one tracked metric (e.g. `total_score`, `tool_calls`)
 
 ### Feedback Flywheel
-```
-Production failure
-    → Sentiment sentinel captures EvalCase (status=needs_label)
-    → Human labels expected_output  (status=labeled)
-    → Batch threshold triggers re-evolution against labeled dataset
-    → GeminiJudge grades against expected — gate: no regression → redeploy
-```
-
-The sentinel lives outside the harness and cannot be evolved away.
+When the evolved workflow is still wrong, a sentinel outside the harness captures the failure. Humans label the expected output, triggering re-evolution against the full labeled dataset — gate: no regression on all labeled cases → redeploy.
 
 ---
 
@@ -203,9 +185,9 @@ Evolutionary_AI_Engineering_Teams/
 │   ├── observability/  # EventBus, SSE server, web UI, eval dataset API
 │   ├── eval_dataset/   # EvalCase model + production capture flow
 │   └── pipeline.py     # Orchestrates compile → run → evaluate → evolve loop
+├── assets/             # Architecture SVG diagrams
 ├── demos/harness-demo/ # Remotion + Kokoro TTS demo video pipeline
 ├── docs/               # 14 design docs + MASTER_RFC
-├── diagrams/           # Architecture / evolution / runtime Mermaid diagrams
 ├── examples/           # org spec + team v1/v2 YAML
 ├── cli.py              # CLI: compile / run / evolve / serve
 ├── docker-compose.yml
@@ -218,33 +200,11 @@ Evolutionary_AI_Engineering_Teams/
 
 | Doc | Description |
 |---|---|
-| [`docs/architecture_diagrams.md`](Evolutionary_AI_Engineering_Teams/docs/architecture_diagrams.md) | Full ASCII architecture — 13 diagrams |
 | [`docs/MASTER_RFC.md`](Evolutionary_AI_Engineering_Teams/docs/MASTER_RFC.md) | Full system RFC |
 | [`docs/14_feedback_flywheel.md`](Evolutionary_AI_Engineering_Teams/docs/14_feedback_flywheel.md) | Production feedback flywheel design |
 | [`docs/07_evaluation.md`](Evolutionary_AI_Engineering_Teams/docs/07_evaluation.md) | LLM judge + scoring details |
 | [`docs/04_organization_ir.md`](Evolutionary_AI_Engineering_Teams/docs/04_organization_ir.md) | Harness IR schema reference |
 | [`docs/06_evolution_engine.md`](Evolutionary_AI_Engineering_Teams/docs/06_evolution_engine.md) | Mutation operators + standing rules |
-
----
-
-## Infrastructure
-
-```
-App server
-├── python cli.py serve
-├── Gemini 2.5 Flash   (Vertex AI)
-├── Claude Sonnet 4.6  (Vertex AI)
-│
-MongoDB Atlas
-└── organizations, runs, evaluations, mutations, lessons, eval_cases
-│
-DigitalOcean Droplet
-├── Qdrant     :6333   (task embeddings)
-└── ClickHouse :8123   (run history + decay scoring)
-
-Kuzu (embedded, in-process)
-└── /tmp/kuzu_harness  (topology gene pool graph)
-```
 
 ---
 
