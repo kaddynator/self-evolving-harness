@@ -1,41 +1,55 @@
 # Evolutionary AI Engineering Teams
 
-**Agent teams that design, run, evaluate, and improve themselves — from a plain-English task description.**
+> **Agent teams that design, run, evaluate, and improve themselves — from a plain-English task description.**
+
+[![Hackathon](https://img.shields.io/badge/AI%20Engineer%20World's%20Fair-Hackathon%202026-blueviolet?style=for-the-badge)](https://cerebralvalley.ai/e/aiewf-hackathon-2026)
+[![Python](https://img.shields.io/badge/Python-3.11+-blue?style=for-the-badge&logo=python)](https://python.org)
+[![Gemini](https://img.shields.io/badge/Gemini%202.5%20Flash-Vertex%20AI-4285F4?style=for-the-badge&logo=google)](https://cloud.google.com/vertex-ai)
+[![Claude](https://img.shields.io/badge/Claude%20Sonnet%204.6-Anthropic-orange?style=for-the-badge)](https://anthropic.com)
+[![MongoDB](https://img.shields.io/badge/MongoDB%20Atlas-Memory-47A248?style=for-the-badge&logo=mongodb)](https://mongodb.com)
 
 ---
 
 ## Demo
 
-https://github.com/kaddynator/self-evolving-harness/raw/main/Evolutionary_AI_Engineering_Teams/dist/harness-demo.mp4
+<video width="100%" controls>
+  <source src="https://github.com/kaddynator/self-evolving-harness/raw/main/Evolutionary_AI_Engineering_Teams/dist/harness-demo.mp4" type="video/mp4">
+  <a href="https://github.com/kaddynator/self-evolving-harness/raw/main/Evolutionary_AI_Engineering_Teams/dist/harness-demo.mp4">Watch the demo video</a>
+</video>
 
-| Design Studio | Evolution Tab |
-|---|---|
-| ![Design Studio](artifacts/Screenshot%202026-06-28%20at%2012.09.41%20PM.png) | ![Evolution](artifacts/image.png) |
-
-> **Design Studio** — enter a plain-English task, choose domain and agent count, hit Start Evolution.
-> **Evolution tab** — live workflow graph, failure signatures, mutations proposed and gated each generation.
+| Design Studio | Live Evolution |
+|:---:|:---:|
+| ![Design Studio](Evolutionary_AI_Engineering_Teams/artifacts/Screenshot%202026-06-28%20at%2012.09.41%20PM.png) | ![Evolution Tab](Evolutionary_AI_Engineering_Teams/artifacts/image.png) |
+| Enter a plain-English task, pick a domain, hit Start | Live workflow graph, failure signatures, mutation gate |
 
 ---
 
 ## The Problem
 
-Today's AI agents are powerful — but most multi-agent systems remain fundamentally static. Developers predefine the agents, assign their responsibilities, and manually design how they collaborate. This works for predictable workflows, but breaks down when tasks are unfamiliar, evolve over time, or require expertise that was not anticipated during system design.
+Today's AI agents are powerful — but most multi-agent systems remain **fundamentally static**. Developers predefine the agents, assign their responsibilities, and manually design how they collaborate.
+
+This works for predictable workflows, but **breaks down** when:
+- Tasks are unfamiliar or underspecified
+- Requirements evolve mid-run
+- The right expertise wasn't anticipated at design time
+
+**The result:** brittle pipelines that degrade silently, require manual intervention, and never learn from their mistakes.
 
 ---
 
-## What This System Does
+## What We Built
 
-Given a plain-English task, the system:
+A **self-evolving agent harness** — given a plain-English task, it:
 
-1. **Compiles** a multi-agent team (requirements → coder → tester → reviewer) with no manual design
-2. **Executes** each agent against real tools, collecting a full execution trace
-3. **Evaluates** output using a real LLM judge (Claude Sonnet 4.6 or Gemini 2.5 Flash)
-4. **Mines** failure signatures from the trace — wrong tool, oversized patch, late testing, redundant agent
+1. **Compiles** a multi-agent team with no manual design (requirements → coder → tester → reviewer)
+2. **Executes** agents against real tools, collecting a full execution trace
+3. **Evaluates** output with a real LLM judge (Gemini 2.5 Flash or Claude Sonnet 4.6)
+4. **Mines** failure signatures — wrong tool, oversized patch, late testing, redundant agent
 5. **Proposes mutations** — swap a model, tighten a budget, add a verifier, reorder the team
 6. **Gates** each mutation: only candidates that improve without regressing are promoted
 7. **Repeats** — generation after generation, the team adapts on its own
 
-When the evolved workflow is still wrong, humans step in. They label what the correct output should have been. That feedback builds an evaluation set, and the system uses it to rebuild and re-evolve the workflow from the ground up.
+When the evolved workflow is still wrong, humans label the correct output. That feedback builds an evaluation dataset, and the system uses it to re-evolve the workflow from the ground up.
 
 ---
 
@@ -51,44 +65,35 @@ Task Description (plain English)
   RuntimeExecutor  ──agents──▶  RunResult (trace + artifacts)
         │
         ▼
-  Evaluator  ──LLM Judge──▶  EvaluationResult (score)
+  Evaluator  ──LLM Judge──▶  EvaluationResult (score 0–100)
         │
         ▼
   WeaknessMiner  ──▶  FailureSignatures
         │
         ▼
-  EvolutionEngine  ──▶  Candidate Harnessess (mutations)
+  EvolutionEngine  ──▶  Candidate Harnesses (8 mutation operators)
         │
         ▼
   ValidationGate  ──▶  Accept / Reject each candidate
         │
         ▼
-  MongoMemoryStore  ──▶  Persist all runs, evaluations, mutations, lessons
+  MongoMemoryStore  ──▶  Persist runs, evaluations, mutations, lessons
         │
         ▼  (loop)
   Next Generation
 ```
 
-Full ASCII diagrams for every component: [`docs/architecture_diagrams.md`](docs/architecture_diagrams.md)
+The **Organization Harness IR** is the central data structure — a fully executable YAML spec defining agents, topology, evaluation criteria, and mutation policy. Every generation increments the version; the lineage is fully traceable by `organization.id`.
 
 ---
 
-## Core Concepts
+## Key Features
 
-### Organization Harness IR
-The central data structure — a fully executable YAML specification that defines:
-- **Agents**: id, role, prompt, model, tools, budget, memory policy
-- **Topology**: phases, edges (blocking / feedback / broadcast), shared memory
-- **Evaluation**: metrics, binary checks, success threshold, validation gate
-- **Mutation policy**: allowed operators, proposal width, protected components
-
-Every generation produces a new harness version with `organization.version` incremented. The `id` stays constant so the entire lineage is traceable.
-
-### Mutation Operators
+### 8 Mutation Operators
 | Operator | What it does |
 |---|---|
 | `modify_prompt` | Strengthen or expand an agent's instruction via LLM |
-| `change_model` | Upgrade to the next model tier (e.g. flash → pro) |
+| `change_model` | Upgrade to the next model tier (flash → pro) |
 | `add_agent` | Insert a verifier or specialist into the workflow |
 | `remove_agent` | Prune a redundant non-core agent |
 | `adjust_budget` | Tighten max tool calls to force focused execution |
@@ -97,21 +102,18 @@ Every generation produces a new harness version with `organization.version` incr
 | `modify_runtime_policy` | Prevent identical retries, require artifact before finish |
 
 ### Validation Gate
-Each mutation candidate is run end-to-end and gated:
-1. Runtime must not exceed budget
-2. No regression on required metrics (e.g. `tests_pass`)
-3. At least one improvement on tracked metrics (e.g. `total_score`, `tool_calls`)
-
-Only accepted candidates advance to the next generation.
+Each mutation is run end-to-end and rejected if it:
+- Exceeds the runtime budget
+- Regresses any required metric (e.g. `tests_pass`)
+- Fails to improve at least one tracked metric (e.g. `total_score`, `tool_calls`)
 
 ### Feedback Flywheel
 ```
 Production failure
     → Sentiment sentinel captures EvalCase (status=needs_label)
-    → Human labels expected_output (status=labeled)
-    → Batch threshold triggers re-evolution against full labeled dataset
-    → Reference grading: GeminiJudge.grade_against_expected()
-    → Gate: no regression on full labeled set → redeploy
+    → Human labels expected_output  (status=labeled)
+    → Batch threshold triggers re-evolution against labeled dataset
+    → GeminiJudge grades against expected — gate: no regression → redeploy
 ```
 
 The sentinel lives outside the harness and cannot be evolved away.
@@ -122,43 +124,13 @@ The sentinel lives outside the harness and cannot be evolved away.
 
 | Layer | Technology |
 |---|---|
-| **LLM (agents + judge)** | Gemini 2.5 Flash (Vertex AI), Claude Sonnet 4.6 (Anthropic Vertex) |
+| **LLM — agents + judge** | Gemini 2.5 Flash (Vertex AI), Claude Sonnet 4.6 (Anthropic via Vertex) |
 | **State & memory** | MongoDB Atlas — organizations, runs, evaluations, mutations, lessons, eval_cases |
 | **Task similarity** | Qdrant — vector search for warm-start topology retrieval |
 | **Topology gene pool** | Kuzu — embedded graph DB, agent topology lineage |
 | **Run history & scoring** | ClickHouse — 90-day TTL, time-decay scoring (quality / cost) |
-| **Infrastructure** | DigitalOcean Droplets + Docker (Qdrant + ClickHouse on `147.182.239.133`) |
+| **Infrastructure** | DigitalOcean Droplets + Docker |
 | **Web UI** | FastAPI + SSE + Remotion (React) |
-
----
-
-## Project Structure
-
-```
-src/
-├── compiler/          # Synthesizes OrganizationHarness IR from plain-English task
-├── ir/                # Pydantic schema for the full harness IR
-├── runtime/           # Executor: runs agents phase by phase, collects trace
-│   └── tools.py       # Real tool sandbox (read/write/run_tests/git_diff/...)
-├── evaluation/        # Scorer + LLM judge + validation gate
-├── weakness/          # Rule-based failure signature mining
-├── evolution/         # Mutation proposals + mutators (8 operators)
-├── memory/            # MongoDB, Qdrant, Kuzu, ClickHouse stores
-├── llm/               # Backend-neutral LLM client (Claude + Gemini)
-├── observability/     # EventBus, SSE server, web UI, eval dataset API
-├── eval_dataset/      # EvalCase model + production capture flow
-└── pipeline.py        # Orchestrates the full compile→run→evaluate→evolve loop
-
-demos/
-└── harness-demo/      # Remotion + Kokoro TTS demo video pipeline
-
-docs/
-├── architecture_diagrams.md   # ASCII diagrams for every component
-├── 14_feedback_flywheel.md    # Full flywheel design
-└── narration-draft.md         # Demo video narration script
-
-cli.py                 # CLI: compile / run / evolve / serve
-```
 
 ---
 
@@ -166,44 +138,37 @@ cli.py                 # CLI: compile / run / evolve / serve
 
 ### Prerequisites
 - Python 3.11+
-- `gcloud auth application-default login` (for Gemini + Claude via Vertex AI)
-- MongoDB Atlas URI (set in `.env`)
-- DigitalOcean droplet with Qdrant + ClickHouse running (optional — gracefully skipped if absent)
-
-### Setup
+- `gcloud auth application-default login` (Gemini + Claude via Vertex AI)
+- MongoDB Atlas URI
 
 ```bash
-# Clone and enter the project
-cd Evolutionary_AI_Engineering_Teams
+git clone https://github.com/kaddynator/self-evolving-harness.git
+cd self-evolving-harness/Evolutionary_AI_Engineering_Teams
 
-# Create .env
-cat > .env << 'EOF'
-MONGODB_URI="mongodb+srv://<user>:<pass>@cluster0.xxx.mongodb.net"
-DROPLET_IP="147.182.239.133"   # DigitalOcean droplet with Qdrant + ClickHouse
-CH_USER="harness"
-CH_PASSWORD="harness123"
-CH_DB="harness"
-KUZU_PATH="/tmp/kuzu_harness"
-EOF
+# Configure environment
+cp .env.example .env
+# Edit .env with your MONGODB_URI and other credentials
 
 # Install dependencies
 pip install -r requirements.txt
 ```
 
-### Run the web UI
+### Run the Web UI
 
 ```bash
 python cli.py serve
 # Opens http://localhost:8765
 ```
 
-### Compile a harness
+### Compile a Harness from Plain English
 
 ```bash
-python cli.py compile "Add a rate limiter to the payments API" --domain software_engineering -o harness.yaml
+python cli.py compile "Add a rate limiter to the payments API" \
+  --domain software_engineering \
+  -o harness.yaml
 ```
 
-### Run evolution
+### Run Evolution
 
 ```bash
 python cli.py evolve harness.yaml --generations 5
@@ -211,56 +176,77 @@ python cli.py evolve harness.yaml --generations 5
 
 ---
 
-## Web UI
+## Web UI Tabs
 
 | Tab | What it shows |
 |---|---|
-| **Configure** | Task input, domain, agent count, generations — submit a run |
-| **Monitor** | Live agent cards, tool call stream, artifacts produced |
+| **Configure** | Task input, domain, agent count, generations |
+| **Monitor** | Live agent cards, tool call stream, artifacts |
 | **Evolution** | Topology graph, mutation proposals, gate decisions |
 | **Metrics** | Per-generation score table, metric breakdown |
 | **Leaderboard** | Top workflows by avg score from ClickHouse |
 
 ---
 
+## Project Structure
+
+```
+Evolutionary_AI_Engineering_Teams/
+├── src/
+│   ├── compiler/       # Synthesizes OrganizationHarness IR from plain-English task
+│   ├── ir/             # Pydantic schema for the full harness IR
+│   ├── runtime/        # Executor: runs agents phase by phase, collects trace
+│   ├── evaluation/     # Scorer + LLM judge + validation gate
+│   ├── weakness/       # Rule-based failure signature mining
+│   ├── evolution/      # Mutation proposals + mutators (8 operators)
+│   ├── memory/         # MongoDB, Qdrant, Kuzu, ClickHouse stores
+│   ├── llm/            # Backend-neutral LLM client (Claude + Gemini)
+│   ├── observability/  # EventBus, SSE server, web UI, eval dataset API
+│   ├── eval_dataset/   # EvalCase model + production capture flow
+│   └── pipeline.py     # Orchestrates compile → run → evaluate → evolve loop
+├── demos/harness-demo/ # Remotion + Kokoro TTS demo video pipeline
+├── docs/               # 14 design docs + MASTER_RFC
+├── diagrams/           # Architecture / evolution / runtime Mermaid diagrams
+├── examples/           # org spec + team v1/v2 YAML
+├── cli.py              # CLI: compile / run / evolve / serve
+├── docker-compose.yml
+└── requirements.txt
+```
+
+---
+
+## Documentation
+
+| Doc | Description |
+|---|---|
+| [`docs/architecture_diagrams.md`](Evolutionary_AI_Engineering_Teams/docs/architecture_diagrams.md) | Full ASCII architecture — 13 diagrams |
+| [`docs/MASTER_RFC.md`](Evolutionary_AI_Engineering_Teams/docs/MASTER_RFC.md) | Full system RFC |
+| [`docs/14_feedback_flywheel.md`](Evolutionary_AI_Engineering_Teams/docs/14_feedback_flywheel.md) | Production feedback flywheel design |
+| [`docs/07_evaluation.md`](Evolutionary_AI_Engineering_Teams/docs/07_evaluation.md) | LLM judge + scoring details |
+| [`docs/04_organization_ir.md`](Evolutionary_AI_Engineering_Teams/docs/04_organization_ir.md) | Harness IR schema reference |
+| [`docs/06_evolution_engine.md`](Evolutionary_AI_Engineering_Teams/docs/06_evolution_engine.md) | Mutation operators + standing rules |
+
+---
+
 ## Infrastructure
 
 ```
-Your machine / App server (143.110.151.94)
+App server
 ├── python cli.py serve
-├── Gemini 2.5 Flash  (Vertex AI)
-├── Claude Sonnet 4.6 (Vertex AI)
-└── connects to ──────────────────────────────────┐
-                                                   │
-MongoDB Atlas (cloud)                              │
-└── cluster0.zsn3yev.mongodb.net                 │
-    organizations, runs, evaluations,             │
-    mutations, lessons, eval_cases                │
-                                                   │
-DigitalOcean Droplet 147.182.239.133 ◀────────────┘
-├── Qdrant     :6333  (task embeddings)
-└── ClickHouse :8123  (run history + decay scoring)
+├── Gemini 2.5 Flash   (Vertex AI)
+├── Claude Sonnet 4.6  (Vertex AI)
+│
+MongoDB Atlas
+└── organizations, runs, evaluations, mutations, lessons, eval_cases
+│
+DigitalOcean Droplet
+├── Qdrant     :6333   (task embeddings)
+└── ClickHouse :8123   (run history + decay scoring)
 
 Kuzu (embedded, in-process)
 └── /tmp/kuzu_harness  (topology gene pool graph)
 ```
 
-### Droplet setup (Docker Compose)
-
-```bash
-# On 147.182.239.133
-cd /opt/harness && docker-compose up -d
-```
-
 ---
 
-## Docs
-
-| File | Description |
-|---|---|
-| [`docs/architecture_diagrams.md`](docs/architecture_diagrams.md) | Full ASCII architecture — 13 diagrams |
-| [`docs/14_feedback_flywheel.md`](docs/14_feedback_flywheel.md) | Production feedback flywheel design |
-| [`docs/07_evaluation.md`](docs/07_evaluation.md) | LLM judge + scoring details |
-| [`docs/04_organization_ir.md`](docs/04_organization_ir.md) | Full harness IR schema reference |
-| [`docs/06_evolution_engine.md`](docs/06_evolution_engine.md) | Mutation operators + standing rules |
-| [`mod.md`](mod.md) | Changelog — what was built in this session |
+*Built for the [AI Engineer World's Fair Hackathon 2026](https://cerebralvalley.ai/e/aiewf-hackathon-2026)*
