@@ -12,10 +12,9 @@
 
 ## Demo
 
-<video width="100%" controls>
-  <source src="https://github.com/kaddynator/self-evolving-harness/raw/main/Evolutionary_AI_Engineering_Teams/dist/harness-demo.mp4" type="video/mp4">
-  <a href="https://github.com/kaddynator/self-evolving-harness/raw/main/Evolutionary_AI_Engineering_Teams/dist/harness-demo.mp4">Watch the demo video</a>
-</video>
+> Click the thumbnail below to watch the demo video (opens GitHub's inline video player)
+
+[![Watch Demo](Evolutionary_AI_Engineering_Teams/artifacts/Screenshot%202026-06-28%20at%2012.09.41%20PM.png)](https://github.com/kaddynator/self-evolving-harness/blob/main/Evolutionary_AI_Engineering_Teams/dist/harness-demo.mp4)
 
 | Design Studio | Live Evolution |
 |:---:|:---:|
